@@ -1,0 +1,20 @@
+<description of the function>
+
+Access:  
+-------
+    <assesable roles if any>
+
+URL Params: 
+----------- 
+    <params if any>
+
+JSON Payload:
+--------------------
+    <if any>
+Error Responses:
+----------------
+    <if any>
+
+Return:
+------- 
+    <if any>
