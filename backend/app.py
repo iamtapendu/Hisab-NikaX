@@ -44,8 +44,8 @@ def create_app(config_class=DevelopmentConfig):
 
     # Import and register Blueprints
     # Each blueprint represents a modular component of the app
-    from Users.routes import users_bp
-    # from Auth.routes import auth_bp
+    from users.routes import users_bp
+    from auth.routes import auth_bp
     # from Customer.routes import customer_bp
     # from Supplier.routes import supplier_bp
     # from Staff.routes import staff_bp
@@ -56,7 +56,7 @@ def create_app(config_class=DevelopmentConfig):
     # from Report.routes import report_bp
 
     app.register_blueprint(users_bp)
-    # app.register_blueprint(auth_bp)
+    app.register_blueprint(auth_bp)
     # app.register_blueprint(customer_bp)
     # app.register_blueprint(supplier_bp)
     # app.register_blueprint(staff_bp)

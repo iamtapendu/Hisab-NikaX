@@ -44,11 +44,11 @@ class DevelopmentConfig(Config):
     
     SQLALCHEMY_DATABASE_URI : str
         URI for the development database.
-        Default: SQLite file 'Database/dev.db'.
+        Default: SQLite file 'database/app.db'.
     """
 
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = f"sqlite:///{os.path.join(basedir, 'Database', 'app.db')}"
+    SQLALCHEMY_DATABASE_URI = f"sqlite:///{os.path.join(basedir, 'database', 'app.db')}"
 
 
 class ProductionConfig(Config):
@@ -73,7 +73,7 @@ class ProductionConfig(Config):
 
     SQLALCHEMY_DATABASE_URI = os.getenv(
         "DATABASE_URL",
-        f"sqlite:///{os.path.join(basedir, 'Database', 'app.db')}"
+        f"sqlite:///{os.path.join(basedir, 'database', 'app.db')}"
     )
     DEBUG = False  # Ensure debug mode is off in production
 
