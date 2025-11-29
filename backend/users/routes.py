@@ -1,6 +1,7 @@
 from flask import request
 from extensions import db, role_required, validate_field, make_response,\
     USERNAME_REGX, NAME_REGX, EMAIL_REGX, PHONE_REGX, PASSWORD_REGX, ROLE_REGX, IMAGE_REGX
+from flask_jwt_extended import get_jwt_identity,jwt_required
 from .model import User
 from . import users_bp
 
@@ -76,8 +77,8 @@ def get_users():
 
 
 @users_bp.get("/<int:user_id>")
-@role_required('admin')
-def get_user(user_id):
+@jwt_required()
+def get_user(user_id:int):
     """
     Retrieve a single user by ID.
 
@@ -87,7 +88,7 @@ def get_user(user_id):
 
     Access:
     -------
-        Admin only
+        Any one with valid credentials
 
     URL Params:
     -----------
@@ -110,13 +111,21 @@ def get_user(user_id):
         200 OK  
             A JSON object representing the serialized user record.
     """
+    user_jwt = get_jwt_identity()
+    if user_jwt["user_id"]!=user_id and user_jwt["role"]!="admin":
+        return make_response(
+            message="Not able to fetch data.",
+            errors="requesting user does not have admin access",
+            code=403
+        )
+    
     user = User.query.get_or_404(user_id)
     return make_response(data=user.to_dict(),message="Successfully retrive data.")
 
 
 @users_bp.get("/username/<username>")
-@role_required('admin')
-def get_user(username):
+@jwt_required()
+def get_user(username:str):
     """
     Retrieve a single user by useranme.
 
@@ -126,7 +135,7 @@ def get_user(username):
 
     Access:
     -------
-        Admin only
+        Anyone with valid credentials
 
     URL Params:
     -----------
@@ -149,6 +158,13 @@ def get_user(username):
         200 OK  
             A JSON object representing the serialized user record. 
     """
+    username_jwt = User.query.get(get_jwt_identity()["user_id"]).first().username
+    if username_jwt!=username and get_jwt_identity()["role"]!="admin":
+        return make_response(
+            message="Not able to fetch data.",
+            errors="Requesting user does not have admin access",
+            code=403
+        )
     # Get user or return 404
     user = User.query.filter_by(username=username).first_or_404()
 
@@ -220,6 +236,7 @@ def create_user():
             value = validate_field(data.get(field), pattern, field)
             if value is not None:
                 setattr(new_user, field, value)
+    
     except ValueError as e:
         # Regex validation error
         return make_response(
@@ -243,19 +260,19 @@ def create_user():
 
 
 @users_bp.put("/<int:user_id>")
-@role_required('admin')
+@jwt_required()
 def update_user(user_id):
     """
     Update an existing user's information.
 
-    This endpoint allows administrators to update specific user fields such as 
+    This endpoint allows users and administrators to update specific user fields such as 
     username, email, name, phone, role, image, and password. Only the fields 
     included in the incoming JSON payload will be updated. Each field is 
     validated against its corresponding regex pattern before being saved.
 
     Access:  
     -------
-        Admin only
+        Anyone with valid credentials
 
     URL Params: 
     ----------- 
@@ -275,6 +292,7 @@ def update_user(user_id):
     Error Responses:
     ----------------
         - 400: Invalid field format (regex failure)
+        - 403: Forbidden Returned if the requesting user does not have access.
         - 404: User ID not found
         - 409: Username/email already exists
 
@@ -283,6 +301,14 @@ def update_user(user_id):
         json reponse containing updated users data.
 
     """
+
+    user_jwt = get_jwt_identity()
+    if user_jwt["user_id"]!=user_id and user_jwt["role"]!="admin":
+        return make_response(
+            message="Not able to update data.",
+            errors="User does not have admin access",
+            code=403
+        )
 
     user = User.query.get_or_404(user_id)
     data = request.get_json()
@@ -323,18 +349,18 @@ def update_user(user_id):
 
 
 @users_bp.put("/<int:user_id>/password")
-@role_required('admin')
+@jwt_required()
 def update_password(user_id):
     """
     This endpoint allows administrators to update password. 
 
     Access:  
     -------
-        Admin only
+        Anyone with valid credentials.
 
     URL Params: 
     ----------- 
-        user_id (int): Unique ID of the user to update.
+        user_id: int
 
     JSON Payload:
     -------------
@@ -346,6 +372,7 @@ def update_password(user_id):
     Error Responses:
     ----------------
         - 400: Invalid field format (regex failure)
+        - 403: Forbidden Returned if the requesting user does not have access.
         - 404: User ID not found
     
     Return:
@@ -353,16 +380,23 @@ def update_password(user_id):
         200 OK
             JSON reponse containing successfull response.
     """
-
     user = User.query.get_or_404(user_id)
+    user_jwt = get_jwt_identity()
     data = request.get_json()
-
+    
     # Mandatory data
     if not data.get("old_password") or not data.get("new_password"):
         return make_response(
             message="Not able to change password.",
             errors="Old and new password are required",
             code=400
+        )
+    # Checking only admin or self password can be changed
+    if user.id!= user_jwt["user_id"] and user_jwt["role"]!='admin':
+        return make_response(
+            message="Not able to change password.",
+            errors="User does not have admin access",
+            code=403
         )
         
     # Check for old password correctness
@@ -427,8 +461,11 @@ def delete_user(user_id):
 
     Error Responses:
     -----------------
-        404 Not Found  
+        - 404 Not Found  
             Returned if the user with the given ID does not exist.
+        - 403 Forbidden 
+            Returned if the requesting user does not have access.
+
 
     Return:
     -------

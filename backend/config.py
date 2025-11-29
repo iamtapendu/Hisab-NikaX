@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 
 # Base directory of the project
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -28,6 +29,7 @@ class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "secretkey")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "supersecret")
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=30) 
 
 
 class DevelopmentConfig(Config):
