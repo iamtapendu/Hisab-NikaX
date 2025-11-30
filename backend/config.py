@@ -14,22 +14,54 @@ class Config:
     Attributes
     ----------
     SECRET_KEY : str
-        Secret key for Flask sessions and CSRF protection.
-        Default: 'secretkey', should be overridden in production.
-    
+        Secret key used by Flask for securely signing session cookies
+        and protecting against CSRF attacks. It should be changed
+        in production to a long, unpredictable value. Default is
+        taken from the environment variable `SECRET_KEY`, otherwise
+        'secretkey' is used.
+
     SQLALCHEMY_TRACK_MODIFICATIONS : bool
-        Whether to track modifications of objects and emit signals.
-        Default: False for better performance.
-    
+        Determines whether SQLAlchemy will track object modifications
+        and emit signals. Enabling this adds overhead and is not needed
+        for most applications. Default is False for better performance.
+
     JWT_SECRET_KEY : str
-        Secret key used by Flask-JWT-Extended for signing tokens.
-        Default: 'supersecret', should be overridden in production.
+        The secret key used internally by Flask-JWT-Extended to sign
+        and verify JWT access and refresh tokens. This must be secure
+        in production, ideally set using an environment variable.
+        Default comes from `JWT_SECRET_KEY`, otherwise 'supersecret'.
+
+    JWT_ACCESS_TOKEN_EXPIRES : datetime.timedelta
+        Configures the lifespan of generated access tokens. Once expired,
+        the user must request a new access token using a refresh token.
+        The default is 30 minutes, making access tokens short-lived and
+        secure for API calls.
+
+    JWT_REFRESH_TOKEN_EXPIRES : datetime.timedelta
+        Determines how long refresh tokens remain valid. Refresh tokens
+        are used to obtain new access tokens without logging in again.
+        The default is 24 hours, meaning users can stay authenticated
+        for an entire day without re-entering their credentials.
+
+    JWT_BLACKLIST_ENABLED : bool
+        Enables token blacklisting functionality in Flask-JWT-Extended.
+        When set to True, the application can invalidate tokens manually
+        (e.g., during a logout) by storing them in a blacklist.
+
+    JWT_BLACKLIST_TOKEN_CHECKS : list[str]
+        Specifies which token types should be checked against the blacklist.
+        Options are "access", "refresh", or both. By default, both access
+        and refresh tokens are verified, ensuring that any explicitly revoked
+        token cannot be used again.
     """
 
     SECRET_KEY = os.getenv("SECRET_KEY", "secretkey")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "supersecret")
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=30) 
+    JWT_REFRESH_TOKEN_EXPIRES = timedelta(hours=24)
+    JWT_BLACKLIST_ENABLED = True
+    JWT_BLACKLIST_TOKEN_CHECKS = ["access", "refresh"]
 
 
 class DevelopmentConfig(Config):

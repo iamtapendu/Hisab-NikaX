@@ -10,6 +10,9 @@ db = SQLAlchemy()
 bcrypt = Bcrypt()
 jwt = JWTManager()
 
+# Token blacklist
+blacklist = set()
+
 # Username:
 #  - 3–20 characters
 #  - letters, digits, underscore, dot

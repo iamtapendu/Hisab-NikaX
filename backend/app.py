@@ -1,5 +1,5 @@
 from flask import Flask
-from extensions import db, bcrypt, jwt, make_response
+from extensions import db, bcrypt, jwt, blacklist, make_response
 from werkzeug.exceptions import NotFound
 from flask_cors import CORS
 from config import DevelopmentConfig
@@ -74,6 +74,10 @@ def create_app(config_class=DevelopmentConfig):
             code=404,
             errors={"detail": str(e)}
         )
+    
+    @jwt.token_in_blocklist_loader
+    def is_token_revoked(jwt_header, jwt_payload):
+        return jwt_payload["jti"] in blacklist
 
     return app
 
