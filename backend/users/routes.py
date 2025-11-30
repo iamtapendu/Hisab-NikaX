@@ -125,7 +125,7 @@ def get_user(user_id:int):
 
 @users_bp.get("/username/<username>")
 @jwt_required()
-def get_user(username:str):
+def get_user_by_username(username:str):
     """
     Retrieve a single user by useranme.
 
@@ -158,7 +158,7 @@ def get_user(username:str):
         200 OK  
             A JSON object representing the serialized user record. 
     """
-    username_jwt = User.query.get(get_jwt_identity()["user_id"]).first().username
+    username_jwt = User.query.get(get_jwt_identity()["user_id"]).first().username # type: ignore
     if username_jwt!=username and get_jwt_identity()["role"]!="admin":
         return make_response(
             message="Not able to fetch data.",
