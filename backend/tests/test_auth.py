@@ -184,8 +184,6 @@ class TestTS003:
         assert "access_token" in json["data"]
         assert "refresh_token" in json["data"]
  
-
-
     @pytest.mark.case("TC002")
     def test_login_wrong_data(self, client, create_user):
         """
@@ -213,13 +211,33 @@ class TestTS003:
         assert "not able to login" in json["message"].lower()
         assert "invalid username/password" in json["errors"].lower()
 
-#     @pytest.mark.fail
-#     def test_login_missing_fields(self, client):
-#         res = client.post("/auth/login", json={"username": ""})
-#         json = res.get_json()
+    @pytest.mark.case("TC003")
+    def test_login_missing_fields(self, client):
+        """
+        Test Case: TC003
 
-#         assert res.status_code == 400
-#         assert "Missing username/password" in json["errors"]
+        Description: Verify users not able to login themselves without username and password.
+        """
+        # without password
+        payload = {"username": "testuser"}
+        res = client.post("/api/auth/login", json=payload)
+        json = res.get_json()
+
+        assert res.status_code == 400
+        assert json["status"] == "fail"
+        assert "not able to login" in json["message"].lower()
+        assert "missing username/password" in json["errors"].lower()
+
+        # Without username
+        payload = {"password": "TestPass123@"}
+        res = client.post("/api/auth/login", json=payload)
+        json = res.get_json()
+
+        assert res.status_code == 400
+        assert json["status"] == "fail"
+        assert "not able to login" in json["message"].lower()
+        assert "missing username/password" in json["errors"].lower()
+
 
 
 # @pytest.mark.auth
