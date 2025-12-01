@@ -91,6 +91,7 @@ class TestTS002:
     def test_register_missing_fields(self, client):
         """
         Test Case: TC002
+        
         Description: Verify users not able to register without giving mandatory data.
         i.e. name, username, and password.
         """
@@ -122,6 +123,7 @@ class TestTS002:
     def test_duplicate_username(self, client, create_user):
         """
         Test Case: TC003
+
         Description: Verify users not able to register without giving unique username.
         """
         payload = {
@@ -137,20 +139,47 @@ class TestTS002:
         assert "Username already exists" in json["errors"]
         assert json["status"] == "fail"
 
+@pytest.mark.AUTH
+@pytest.mark.scenario("TS003")
+class TestTS003:
+    """
+    Module: AUTH	
 
-# @pytest.mark.auth
-# class TestLogin:
-#     """Test login functionality"""
+    Test Scenario: TS003
+    
+    Description: Users able to login themselves with valid data.
+    """
 
-#     @pytest.mark.success
-#     def test_login_success(self, client, create_user):
-#         payload = {"username": "testuser", "password": "TestPass123@"}
-#         res = client.post("/auth/login", json=payload)
-#         json = res.get_json()
+    @pytest.mark.case("TC001")
+    def test_login_success(self, client, create_user):
+        payload = {"username": "testuser", "password": "TestPass123@"}
+        res = client.post("/api/auth/login", json=payload)
+        json = res.get_json()
 
-#         assert res.status_code == 200
-#         assert "access_token" in json["data"]
-#         assert "refresh_token" in json["data"]
+        assert res.status_code == 200
+        assert json["status"] == "success"
+        assert "login successful" in json["message"].lower()
+        assert "access_token" in json["data"]
+        assert "refresh_token" in json["data"]
+
+        # Registering new user
+        payload = {
+            "username": "newuser",
+            "password": "NewPass123@",
+            "name": "New User"
+        }
+        res = client.post("/api/auth/register", json=payload)
+
+        res = client.post("/api/auth/login", json={"username": "newuser","password": "NewPass123@"})
+        json = res.get_json()
+
+        assert res.status_code == 200
+        assert json["status"] == "success"
+        assert "login successful" in json["message"].lower()
+        assert "access_token" in json["data"]
+        assert "refresh_token" in json["data"]
+ 
+
 
 #     @pytest.mark.fail
 #     def test_login_wrong_password(self, client, create_user):
