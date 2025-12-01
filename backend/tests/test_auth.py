@@ -82,7 +82,7 @@ class TestTS002:
         json = res.get_json()
 
         assert res.status_code == 201
-        assert json["success"] is True
+        assert json["status"] == "success"
         assert json["data"]["username"] == "newuser"
         assert json["data"]["name"] == "New User"
         assert json["data"]["role"] == "guest"

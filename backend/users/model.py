@@ -1,5 +1,5 @@
 from extensions import db, bcrypt
-from datetime import datetime
+from datetime import datetime, timezone
 
 class User(db.Model):
     """
@@ -52,7 +52,7 @@ class User(db.Model):
     image = db.Column(db.String(50), default='')
 
     # Use utc to ensure timezone-independent creation timestamp
-    created_at = db.Column(db.DateTime, default=lambda:datetime.now(datetime.timezone.utc))
+    created_at = db.Column(db.DateTime, default=lambda:datetime.now(timezone.utc))
 
     # Password handling
     def set_password(self, password):
