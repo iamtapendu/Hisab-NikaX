@@ -39,7 +39,7 @@ class User(db.Model):
         Serializes the user object to a dictionary for JSON responses.
     """
 
-    __tablename__ = "user"
+    __tablename__ = "users"
 
     # Table columns    
     id = db.Column(db.Integer, primary_key=True)
@@ -100,7 +100,6 @@ class User(db.Model):
             "email": self.email,
             "phone": str(self.phone) if self.phone else None,  # Convert Numeric to string
             "role": self.role,
-            "is_active": self.is_active,
             "created_at": self.created_at.isoformat(),
             "image": self.image
         }

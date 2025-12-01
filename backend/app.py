@@ -2,11 +2,11 @@ from flask import Flask
 from extensions import db, bcrypt, jwt, blacklist, make_response
 from werkzeug.exceptions import NotFound
 from flask_cors import CORS
-from config import DevelopmentConfig
+from config import Config
 import os
 
 
-def create_app(config_class=DevelopmentConfig):
+def create_app(config_class=Config):
     """
     Flask application factory.
 

@@ -62,6 +62,7 @@ class Config:
     JWT_REFRESH_TOKEN_EXPIRES = timedelta(hours=24)
     JWT_BLACKLIST_ENABLED = True
     JWT_BLACKLIST_TOKEN_CHECKS = ["access", "refresh"]
+    SQLALCHEMY_DATABASE_URI = f"sqlite:///{os.path.join(basedir, 'database', 'app.db')}"
 
 
 class DevelopmentConfig(Config):
