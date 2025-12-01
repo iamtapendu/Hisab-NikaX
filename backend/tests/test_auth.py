@@ -152,6 +152,11 @@ class TestTS003:
 
     @pytest.mark.case("TC001")
     def test_login_success(self, client, create_user):
+        """
+        Test Case: TC001
+
+        Description: Verify users able to login themselves with valid username and password.
+        """
         payload = {"username": "testuser", "password": "TestPass123@"}
         res = client.post("/api/auth/login", json=payload)
         json = res.get_json()
@@ -181,14 +186,32 @@ class TestTS003:
  
 
 
-#     @pytest.mark.fail
-#     def test_login_wrong_password(self, client, create_user):
-#         payload = {"username": "testuser", "password": "Wrong123@"}
-#         res = client.post("/auth/login", json=payload)
-#         json = res.get_json()
+    @pytest.mark.case("TC002")
+    def test_login_wrong_data(self, client, create_user):
+        """
+        Test Case: TC002
 
-#         assert res.status_code == 400
-#         assert "Invalid username/password" in json["errors"]
+        Description: Verify users not able to login themselves with invalid username and password.
+        """
+        # Wrong password
+        payload = {"username": "testuser", "password": "Wrong123@"}
+        res = client.post("/api/auth/login", json=payload)
+        json = res.get_json()
+
+        assert res.status_code == 400
+        assert json["status"] == "fail"
+        assert "not able to login" in json["message"].lower()
+        assert "invalid username/password" in json["errors"].lower()
+
+        # Wrong username
+        payload = {"username": "testuser1", "password": "Wrong123@"}
+        res = client.post("/api/auth/login", json=payload)
+        json = res.get_json()
+
+        assert res.status_code == 400
+        assert json["status"] == "fail"
+        assert "not able to login" in json["message"].lower()
+        assert "invalid username/password" in json["errors"].lower()
 
 #     @pytest.mark.fail
 #     def test_login_missing_fields(self, client):
