@@ -82,6 +82,7 @@ class TestTS002:
         json = res.get_json()
 
         assert res.status_code == 201
+        assert json["code"] == 201
         assert json["status"] == "success"
         assert json["data"]["username"] == "newuser"
         assert json["data"]["name"] == "New User"
@@ -100,6 +101,7 @@ class TestTS002:
         json = res.get_json()
 
         assert res.status_code == 400
+        assert json["code"] == 400
         assert "Missing mandatory fields" in json["errors"]
         assert json["status"] == "fail"
 
@@ -108,6 +110,7 @@ class TestTS002:
         json = res.get_json()
 
         assert res.status_code == 400
+        assert json["code"] == 400
         assert "Missing mandatory fields" in json["errors"]
         assert json["status"] == "fail"
 
@@ -116,6 +119,7 @@ class TestTS002:
         json = res.get_json()
 
         assert res.status_code == 400
+        assert json["code"] == 400
         assert "Missing mandatory fields" in json["errors"]
         assert json["status"] == "fail"
 
@@ -136,6 +140,7 @@ class TestTS002:
         json = res.get_json()
 
         assert res.status_code == 409
+        assert json["code"] == 409
         assert "Username already exists" in json["errors"]
         assert json["status"] == "fail"
 
@@ -162,6 +167,7 @@ class TestTS003:
         json = res.get_json()
 
         assert res.status_code == 200
+        assert json["code"] == 200
         assert json["status"] == "success"
         assert "login successful" in json["message"].lower()
         assert "access_token" in json["data"]
@@ -179,6 +185,7 @@ class TestTS003:
         json = res.get_json()
 
         assert res.status_code == 200
+        assert json["code"] == 200
         assert json["status"] == "success"
         assert "login successful" in json["message"].lower()
         assert "access_token" in json["data"]
@@ -197,6 +204,7 @@ class TestTS003:
         json = res.get_json()
 
         assert res.status_code == 400
+        assert json["code"] == 400
         assert json["status"] == "fail"
         assert "not able to login" in json["message"].lower()
         assert "invalid username/password" in json["errors"].lower()
@@ -207,6 +215,7 @@ class TestTS003:
         json = res.get_json()
 
         assert res.status_code == 400
+        assert json["code"] == 400
         assert json["status"] == "fail"
         assert "not able to login" in json["message"].lower()
         assert "invalid username/password" in json["errors"].lower()
@@ -224,6 +233,7 @@ class TestTS003:
         json = res.get_json()
 
         assert res.status_code == 400
+        assert json["code"] == 400
         assert json["status"] == "fail"
         assert "not able to login" in json["message"].lower()
         assert "missing username/password" in json["errors"].lower()
@@ -234,37 +244,70 @@ class TestTS003:
         json = res.get_json()
 
         assert res.status_code == 400
+        assert json["code"] == 400
         assert json["status"] == "fail"
         assert "not able to login" in json["message"].lower()
         assert "missing username/password" in json["errors"].lower()
 
+@pytest.mark.AUTH
+@pytest.mark.scenario("TS004")
+class TestTS004:
+    """
+    Module: AUTH	
 
+    Test Scenario: TS004
+    
+    Description: Users able to refresh access token with valid refresh token.
+    """
 
-# @pytest.mark.auth
-# class TestRefreshToken:
-#     """Test JWT refresh token"""
+    @pytest.mark.case("TC001")
+    def test_refresh_token_valid(self, client, create_user):
+        """
+        Test Case: TC001
 
-#     @pytest.mark.success
-#     def test_refresh_success(self, client, create_user):
-#         # login to get refresh token
-#         login = client.post("/auth/login", json={
-#             "username": "testuser",
-#             "password": "TestPass123@"
-#         }).get_json()
+        Description: Verify users able to refresh access token with valid token.
+        """
+        # login to get refresh token
+        payload = {"username": "testuser", "password": "TestPass123@"}
+        res = client.post("/api/auth/login", json=payload)
+        json = res.get_json()
+        
+        assert res.status_code == 200
+        assert json["code"] == 200
+        assert json["status"] == "success"
+        assert "access_token" in json["data"]
+        assert "refresh_token" in json["data"]
 
-#         refresh = login["data"]["refresh_token"]
+        refresh = json["data"]["refresh_token"]
+        
+        headers = {"Authorization": f"Bearer {refresh}"}
+        res = client.post("/api/auth/refresh", headers=headers)
+        json = res.get_json()
 
-#         headers = {"Authorization": f"Bearer {refresh}"}
-#         res = client.post("/auth/refresh", headers=headers)
-#         json = res.get_json()
+        assert res.status_code == 200
+        assert json["code"] == 200
+        assert json["status"] == "success"
+        assert "access_token" in json["data"]
+        assert "token refreshed successfully" in json["message"].lower()
 
-#         assert res.status_code == 200
-#         assert "access_token" in json["data"]
+    @pytest.mark.case("TC002")
+    def test_refresh_invalid_token(self, client):
+        """
+        Test Case: TC002
 
-#     @pytest.mark.fail
-#     def test_refresh_without_token(self, client):
-#         res = client.post("/auth/refresh")
-#         assert res.status_code == 401  # JWT missing
+        Description: Verify users not able to refresh access token with invalid token or missing token.
+        """
+        # invalid token
+        headers = {"Authorization": f"Bearer invalid token"}
+        res = client.post("/api/auth/refresh", headers=headers)
+        json = res.get_json()
+
+        assert res.status_code == 422
+        assert "bad authorization header" in json["msg"].lower()
+        
+        # without token
+        res = client.post("/api/auth/refresh")
+        assert res.status_code == 401  # JWT missing
 
 
 # @pytest.mark.auth

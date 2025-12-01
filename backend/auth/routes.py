@@ -145,8 +145,8 @@ def login():
             code=400
         )
 
-    access_token = create_access_token(identity={"user_id":user.id, "role":user.role})
-    refresh_token = create_refresh_token(identity={"user_id":user.id, "role":user.role})
+    access_token = create_access_token(identity=str({"user_id":user.id, "role":user.role}))
+    refresh_token = create_refresh_token(identity=str({"user_id":user.id, "role":user.role}))
 
     return make_response(
         data={"access_token":access_token,"refresh_token":refresh_token},
