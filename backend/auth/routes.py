@@ -56,6 +56,7 @@ def register():
         return make_response(
             message="Not able to register user.",
             errors="Missing mandatory fields",
+            status="fail",
             code=400
         )
 
@@ -63,6 +64,7 @@ def register():
         return make_response(
             message="Not able to register user.",
             errors="Username already exists.",
+            status="fail",
             code=409
         )
     
@@ -78,6 +80,7 @@ def register():
         return make_response(
             message="Not able to register user.",
             errors=str(e),
+            status="fail",
             code=400
         )
 
@@ -128,6 +131,7 @@ def login():
         return make_response(
             message="Not able to login.",
             errors="Missing username/password",
+            status="fail",
             code=400
         )
     
@@ -137,6 +141,7 @@ def login():
         return make_response(
             message="Not able to login",
             errors="Invalid username/password",
+            status="fail",
             code=400
         )
 
@@ -224,6 +229,7 @@ def logout():
         return make_response(
             message="Unable to logout.",
             errors="Refresh token is required.",
+            status="fail",
             code=400
         )
 
@@ -235,6 +241,7 @@ def logout():
         return make_response(
             message="Unable to logout.",
             errors="Invalid refresh token: " + str(e),
+            status="fail",
             code=400
         )
 

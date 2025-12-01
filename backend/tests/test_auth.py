@@ -78,7 +78,7 @@ class TestTS002:
             "name": "New User"
         }
 
-        res = client.post("api/auth/register", json=payload)
+        res = client.post("/api/auth/register", json=payload)
         json = res.get_json()
 
         assert res.status_code == 201
@@ -87,27 +87,55 @@ class TestTS002:
         assert json["data"]["name"] == "New User"
         assert json["data"]["role"] == "guest"
 
-#     @pytest.mark.fail
-#     def test_register_missing_fields(self, client):
-#         res = client.post("/auth/register", json={})
-#         json = res.get_json()
+    @pytest.mark.case("TC002")
+    def test_register_missing_fields(self, client):
+        """
+        Test Case: TC002
+        Description: Verify users not able to register without giving mandatory data.
+        i.e. name, username, and password.
+        """
+        # No data
+        res = client.post("/api/auth/register", json={})
+        json = res.get_json()
 
-#         assert res.status_code == 400
-#         assert "Missing mandatory fields" in json["errors"]
+        assert res.status_code == 400
+        assert "Missing mandatory fields" in json["errors"]
+        assert json["status"] == "fail"
 
-#     @pytest.mark.fail
-#     def test_register_duplicate_username(self, client, create_user):
-#         payload = {
-#             "username": "testuser",
-#             "password": "TestPass123@",
-#             "name": "Another"
-#         }
+        # Only username
+        res = client.post("/api/auth/register", json={"username":"testuser"})
+        json = res.get_json()
 
-#         res = client.post("/auth/register", json=payload)
-#         json = res.get_json()
+        assert res.status_code == 400
+        assert "Missing mandatory fields" in json["errors"]
+        assert json["status"] == "fail"
 
-#         assert res.status_code == 409
-#         assert "Username already exists" in json["errors"]
+        # Username and password
+        res = client.post("/api/auth/register", json={"username":"testuser","password":"New@Pass123"})
+        json = res.get_json()
+
+        assert res.status_code == 400
+        assert "Missing mandatory fields" in json["errors"]
+        assert json["status"] == "fail"
+
+    @pytest.mark.case("TC003")
+    def test_duplicate_username(self, client, create_user):
+        """
+        Test Case: TC003
+        Description: Verify users not able to register without giving unique username.
+        """
+        payload = {
+            "username": "testuser",
+            "password": "TestPass123@",
+            "name": "Another"
+        }
+
+        res = client.post("/api/auth/register", json=payload)
+        json = res.get_json()
+
+        assert res.status_code == 409
+        assert "Username already exists" in json["errors"]
+        assert json["status"] == "fail"
 
 
 # @pytest.mark.auth
