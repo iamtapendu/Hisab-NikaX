@@ -145,8 +145,14 @@ def login():
             code=400
         )
 
-    access_token = create_access_token(identity=str({"user_id":user.id, "role":user.role}))
-    refresh_token = create_refresh_token(identity=str({"user_id":user.id, "role":user.role}))
+    access_token = create_access_token(
+        identity=str({"user_id":user.id, "role":user.role}),
+        additional_claims={"type": "access"}
+    )
+    refresh_token = create_refresh_token(
+        identity=str({"user_id":user.id, "role":user.role}),
+        additional_claims={"type": "refresh"}
+    )
 
     return make_response(
         data={"access_token":access_token,"refresh_token":refresh_token},
@@ -182,7 +188,7 @@ def refresh_token():
         }
     """
     identity = get_jwt_identity()
-    access = create_access_token(identity=identity)
+    access = create_access_token(identity=identity, additional_claims={"type": "access"})
 
     return make_response(
         data={"access_token": access},
@@ -220,10 +226,9 @@ def logout():
         Simple success message after both tokens are blacklisted.
     """
     current_jti = get_jwt()["jti"]
-    blacklist.add(current_jti)
 
     data = request.get_json() or {}
-    refresh_token = data.get("refresh_token")
+    refresh_token = data.get("refresh_token") or ""
 
     if not refresh_token:
         return make_response(
@@ -234,7 +239,13 @@ def logout():
         )
 
     try:
-        refresh_jti = decode_token(refresh_token)["jti"]
+        token = decode_token(refresh_token)
+        if token["type"] != "refresh":
+            raise Exception(f"Received {token["type"]} token") 
+        
+        refresh_jti = token["jti"]
+
+        blacklist.add(current_jti)
         blacklist.add(refresh_jti)
 
     except Exception as e:
