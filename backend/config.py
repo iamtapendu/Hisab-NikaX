@@ -58,6 +58,7 @@ class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "secretkey")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "supersecret")
+    JWT_IDENTITY_CLAIM = "identity"
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=30) 
     JWT_REFRESH_TOKEN_EXPIRES = timedelta(hours=24)
     JWT_BLACKLIST_ENABLED = True

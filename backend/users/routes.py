@@ -116,6 +116,7 @@ def get_user(user_id:int):
         return make_response(
             message="Not able to fetch data.",
             errors="requesting user does not have admin access",
+            status="fail",
             code=403
         )
     
@@ -163,6 +164,7 @@ def get_user_by_username(username:str):
         return make_response(
             message="Not able to fetch data.",
             errors="Requesting user does not have admin access",
+            status="fail",
             code=403
         )
     # Get user or return 404
@@ -216,6 +218,7 @@ def create_user():
         return make_response(
             message="Not able to create user.",
             errors="Missing mandatory fields",
+            status="fail",
             code=400
         )
 
@@ -224,6 +227,7 @@ def create_user():
         return make_response(
             message="Not able to create user.",
             errors="Username already exists.",
+            status="fail",
             code=409
         )
     
@@ -242,6 +246,7 @@ def create_user():
         return make_response(
             message="Not able to create user.",
             errors=str(e),
+            status="fail",
             code=400
         )
 
@@ -307,6 +312,7 @@ def update_user(user_id):
         return make_response(
             message="Not able to update data.",
             errors="User does not have admin access",
+            status="fail",
             code=403
         )
 
@@ -321,6 +327,7 @@ def update_user(user_id):
                     return make_response(
                         message="Not able to update user.",
                         errors="Username already exists.",
+                        status="fail",
                         code=409
                     )
         
@@ -335,6 +342,7 @@ def update_user(user_id):
         return make_response(
             message="Not able to update user.",
             errors=str(e),
+            status="fail",
             code=400
         )
 
@@ -389,6 +397,7 @@ def update_password(user_id):
         return make_response(
             message="Not able to change password.",
             errors="Old and new password are required",
+            status="fail",
             code=400
         )
     # Checking only admin or self password can be changed
@@ -396,6 +405,7 @@ def update_password(user_id):
         return make_response(
             message="Not able to change password.",
             errors="User does not have admin access",
+            status="fail",
             code=403
         )
         
@@ -404,6 +414,7 @@ def update_password(user_id):
         return make_response(
             message="Not able to change password.",
             errors="Incorrect old password.",
+            status="fail",
             code=400
         )
 
@@ -412,6 +423,7 @@ def update_password(user_id):
         return make_response(
             message="Not able to change password.",
             errors="New password and old are same",
+            status="fail",
             code=409
         )
 
@@ -425,6 +437,7 @@ def update_password(user_id):
         return make_response(
             message="Not able to change password.",
             errors=str(e),
+            status="fail",
             code=400
         )
 

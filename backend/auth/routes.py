@@ -146,11 +146,11 @@ def login():
         )
 
     access_token = create_access_token(
-        identity=str({"user_id":user.id, "role":user.role}),
+        identity={"user_id":user.id, "role":user.role},
         additional_claims={"type": "access"}
     )
     refresh_token = create_refresh_token(
-        identity=str({"user_id":user.id, "role":user.role}),
+        identity={"user_id":user.id, "role":user.role},
         additional_claims={"type": "refresh"}
     )
 
