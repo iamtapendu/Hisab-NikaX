@@ -258,4 +258,201 @@ class TestTS002:
             assert json["status"] == "fail"
             assert "invalid" in json["errors"].lower()
 
+    @pytest.mark.case("TC005")
+    def test_create_users_invalid_name(self, client, create_user, login):
+        """
+        Test Case: TC005
+
+        Description: Verify user can not be created with invalid name
+        """
+        # Admin account
+        user = create_user()
+        json = login(user.username,"TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+        
+        invalid_names = ["A","J0hn","John123","John_Doe","John-Doe","John!","@John","John@",
+                         "J$","O'Connor","Mary-Jane","李雷","123John","J"*51,"John\tDoe","John\nDoe"]
+
+        for name in invalid_names:
+            payload = {
+                "username": "TestUser",
+                "password": "NewPass123@",
+                "name": name
+            }
+
+            res = client.post("/api/users/", headers=headers, json=payload)
+            json = res.get_json()
+
+            assert res.status_code == 400
+            assert json["code"] == 400
+            assert json["status"] == "fail"
+            assert "invalid" in json["errors"].lower()
+    
+    @pytest.mark.case("TC006")
+    def test_create_users_invalid_email(self, client, create_user, login):
+        """
+        Test Case: TC006
+
+        Description: Verify user can not be created with invalid email
+        """
+        # Admin account
+        user = create_user()
+        json = login(user.username,"TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+        
+        invalid_emails = ["plainaddress","@no-local-part.com","no-at-sign.com","user@","user@.com",
+                          "user@com","user@site.","user@site.c","user@.site.com","user..name@example.com",
+                          "user@example..com","user@exa_mple.com","user@exam!ple.com","user@site,com",
+                          "user@site com","user@@example.com","user@#example.com","user@exam$ple.com",
+                          "user@.com.com","user@site..domain.com","user@domain.toolongtldddd",
+                          "userexample.com","user.@example.com",".user@example.com","user@-example.com",
+                          "user@example-.com","user@exam..ple.com","user@ex..ample.com","user@exa mple.com",
+                          "user@","user@domain..com","user\\@example.com","user@domain,com","user@domain;com",
+                          "user@domain@com"]
+
+        for email in invalid_emails:
+            payload = {
+                "username": "TestUser",
+                "password": "NewPass123@",
+                "name": "new user",
+                "email": email
+            }
+
+            res = client.post("/api/users/", headers=headers, json=payload)
+            json = res.get_json()
+            
+            assert res.status_code == 400
+            assert json["code"] == 400
+            assert json["status"] == "fail"
+            assert "invalid" in json["errors"].lower()
+
+    @pytest.mark.case("TC007")
+    def test_create_users_invalid_phone(self, client, create_user, login):
+        """
+        Test Case: TC007
+
+        Description: Verify user can not be created with invalid phone
+        """
+        # Admin account
+        user = create_user()
+        json = login(user.username,"TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+        
+        invalid_phones = ["1234567890","0123456789","5555555555","1111111111","0000000000",
+                          "67890","987654321","9876543210987","+91","+91987654321","+91-987654321",
+                          "+91 98765","+91--9876543210","98765 43210","98-76543210","98 76 54 32 10",
+                          "+91  9876543210","+9109876543210","+91- 9876543210","+91 98765-43210",
+                          "A987654321","+91A987654321","987654321O","+91-987654321O","9876543O10",
+                          "98765_43210","+91_9876543210"]
+
+        for phone in invalid_phones:
+            payload = {
+                "username": "TestUser",
+                "password": "NewPass123@",
+                "name": "new user",
+                "phone": phone
+            }
+
+            res = client.post("/api/users/", headers=headers, json=payload)
+            json = res.get_json()
+            
+            assert res.status_code == 400
+            assert json["code"] == 400
+            assert json["status"] == "fail"
+            assert "invalid" in json["errors"].lower()
+
+    @pytest.mark.case("TC008")
+    def test_create_users_invalid_role(self, client, create_user, login):
+        """
+        Test Case: TC008
+
+        Description: Verify user can not be created with invalid role
+        """
+        # Admin account
+        user = create_user()
+        json = login(user.username,"TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+        
+        invalid_roles = ["user","human","administration","executive","ceo"]
+
+        for role in invalid_roles:
+            payload = {
+                "username": "TestUser",
+                "password": "NewPass123@",
+                "name": "new user",
+                "role": role
+            }
+
+            res = client.post("/api/users/", headers=headers, json=payload)
+            json = res.get_json()
+
+            assert res.status_code == 400
+            assert json["code"] == 400
+            assert json["status"] == "fail"
+            assert "invalid" in json["errors"].lower()
+
+    @pytest.mark.case("TC009")
+    def test_create_users_invalid_image(self, client, create_user, login):
+        """
+        Test Case: TC009
+
+        Description: Verify user can not be created with invalid image
+        """
+        # Admin account
+        user = create_user()
+        json = login(user.username,"TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+        
+        invalid_images = [".jpg","image","image.bmp","image.gif","image.jpgg","imagejpeg",
+                         "image.jpeg.png","image..jpg","im@ge.jpg","im#ge.png","image!.jpeg"]
+
+        for image in invalid_images:
+            payload = {
+                "username": "TestUser",
+                "password": "NewPass123@",
+                "name": "new user",
+                "image": image
+            }
+
+            res = client.post("/api/users/", headers=headers, json=payload)
+            json = res.get_json()
+
+            assert res.status_code == 400
+            assert json["code"] == 400
+            assert json["status"] == "fail"
+            assert "invalid" in json["errors"].lower()
+
+    @pytest.mark.case("TC010")
+    def test_create_users_invalid_password(self, client, create_user, login):
+        """
+        Test Case: TC010
+
+        Description: Verify user can not be created with invalid password
+        """
+        # Admin account
+        user = create_user()
+        json = login(user.username,"TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+        
+        invalid_passwords = ["password", "PASSWORD", "12345678", "password123", "PASSWORD123", 
+                            "pass1234", "Passw0rd", "Passw@rd", "1234@ABC", "abcd!@#$", "ABCDEF12",
+                            "abcABC!@", "abcd1234", "ABCD1234", "abcdABCD", "abcdAB12", "abcd!@12",
+                            "AB12!@#", "abcdAB!@", "1234567!"]
+
+
+        for password in invalid_passwords:
+            payload = {
+                "username": "TestUser",
+                "password": password,
+                "name": "new user"
+            }
+
+            res = client.post("/api/users/", headers=headers, json=payload)
+            json = res.get_json()
+
+            assert res.status_code == 400
+            assert json["code"] == 400
+            assert json["status"] == "fail"
+            assert "invalid" in json["errors"].lower()
+
     

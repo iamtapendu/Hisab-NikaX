@@ -25,13 +25,15 @@ USERNAME_REGX = r"^(?=.{3,20}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$"
 NAME_REGX = r"^[A-Za-z][A-Za-z ]{1,49}$"
 
 # Email:
-#  - full RFC 5322 simplified
-EMAIL_REGX = r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
+EMAIL_REGX = r'^(?!.*\.\.)' \
+           r'([A-Za-z0-9_+%-]+(?:\.[A-Za-z0-9_+%-]+)*)' \
+           r'@' \
+           r'([A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)*)' \
+           r'\.[A-Za-z]{2,5}$'
 
 # Phone:
 #  - Indian mobile numbers
-#  - supports "+91", "0", or 10-digit format
-PHONE_REGX = r"^(\+91[\-\s]?)?[6-9]\d{9}$"
+PHONE_REGX = r"^[6-9]\d{9}$"
 
 # Password:
 #  - Minimum 8 characters
@@ -210,7 +212,8 @@ def validate_field(value, pattern, field_name):
     if value is None or str(value).strip() == "":
         return None  # field not provided, let model defaults apply
     
-    if not re.fullmatch(pattern, str(value)):
+    value = str(value).strip()
+    if not re.fullmatch(pattern, value):
         raise ValueError(f"Invalid {field_name}.")
     
     return value
