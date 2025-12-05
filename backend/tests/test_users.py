@@ -133,7 +133,7 @@ class TestTS002:
         assert json["data"]["name"] == "New User"
         assert json["data"]["role"] == "guest"
 
-        # Admin account
+        # manager account
         user = create_user(username="testuser2",role="manager")
         json = login(user.username,"TestPass123@")
         headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
@@ -455,4 +455,95 @@ class TestTS002:
             assert json["status"] == "fail"
             assert "invalid" in json["errors"].lower()
 
+
+@pytest.mark.USERS
+@pytest.mark.scenario("TS003")
+class TestTS003:
+    """
+    Module: USERS	
+
+    Test Scenario: TS003
     
+    Description: Admin able to get all users data.
+    """
+    
+    @pytest.mark.case("TC001")
+    def test_if_admin_get_all_users(self, client, create_user, login):
+        """
+        Test Case: TC001
+
+        Description: Verify only admin able to get all users data.
+        """
+        # Admin account
+        user = create_user()
+        json = login(user.username,"TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        res = client.get("/api/users/", headers=headers)
+        json = res.get_json()
+       
+        assert res.status_code == 200
+        assert json["code"] == 200
+        assert json["status"] == "success"
+        assert json["data"][0]["username"] == "testuser"
+        assert json["data"][0]["name"] == "Test User"
+        assert json["data"][0]["role"] == "admin"
+
+        # manager account
+        user = create_user(username="testuser2",role="manager")
+        json = login(user.username,"TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        res = client.post("/api/users/", headers=headers)
+        json = res.get_json()
+
+        assert res.status_code == 403
+        assert "access denied" in json["error"].lower()
+
+    @pytest.mark.case("TC002")
+    def test_users_pagination(self, client, create_user, login):
+        """
+        Test Case: TC002
+
+        Description: Verify pagination working as expected
+        """
+        # creating more users for pagination
+        for i in range(14):
+            create_user(username="user_"+str(i))
+
+        # Admin account
+        user = create_user()
+        json = login(user.username,"TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        res = client.get("/api/users/?page=1&per_page=10", headers=headers)
+        json = res.get_json()
+
+        assert res.status_code == 200
+        assert json["code"] == 200
+        assert json["status"] == "success"
+        assert len(json["data"]) == 10
+
+        res = client.get("/api/users/?page=2&per_page=10", headers=headers)
+        json = res.get_json()
+
+        assert res.status_code == 200
+        assert json["code"] == 200
+        assert json["status"] == "success"
+        assert len(json["data"]) == 5
+        assert json["data"][0]["username"] == "user_10" 
+
+    @pytest.mark.case("TC003")
+    def test_get_users_without_login(self, client, create_user, login):
+        """
+        Test Case: TC003
+
+        Description: Verify without login no one able to get access 
+        """
+        res = client.get("/api/users/?page=1&per_page=10")
+        json = res.get_json()
+
+        assert res.status_code == 401
+        assert "missing authorization" in json["msg"].lower()
+
+        
