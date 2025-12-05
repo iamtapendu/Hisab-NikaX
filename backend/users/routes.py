@@ -490,6 +490,14 @@ def delete_user(user_id):
         200 OK  
             JSON object containing a success message.
     """
+    jwt = get_jwt_identity()
+    if jwt["user_id"] == user_id:
+        return make_response(
+            message="Not able to delete user.",
+            errors="Can not delete admin self account.",
+            status="fail",
+            code=400
+        )
     user = User.query.get_or_404(user_id)
 
     db.session.delete(user)

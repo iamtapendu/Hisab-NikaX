@@ -958,4 +958,107 @@ class TestTS005:
         assert json["status"] == "fail"
         assert "invalid" in json["errors"].lower()
         
+@pytest.mark.USERS
+@pytest.mark.scenario("TS006")
+class TestTS006:
+    """
+    Module: USERS	
+
+    Test Scenario: TS006
+    
+    Description: Only admin able to delete user.
+    """
+    
+    @pytest.mark.case("TC001")
+    def test_delete_admin(self, client, create_user, login):
+        """
+        Test Case: TC001
+
+        Description: Verify only admin able to delete user using valid id
+        """
+        user = create_user(role="guest")
+        json = login(user.username,"TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        res = client.delete(f"/api/users/{user.id}", headers=headers)
+        json = res.get_json()
+
+        assert res.status_code == 403
+        assert "access denied" in json["error"].lower()
+
+        user1 = create_user(username="user_00")
+        json = login(user1.username,"TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        res = client.delete(f"/api/users/{user.id}", headers=headers)
+        json = res.get_json()
+
+        assert res.status_code == 200
+        assert json["code"] == 200
+        assert json["status"] == "success"
+        assert "successfuly deleted" in json["message"].lower()
+
+        res = client.delete(f"/api/users/{user.id}", headers=headers)
+        json = res.get_json()
+
+        assert res.status_code == 404
+        assert json["code"] == 404
+        assert json["status"] == "fail"
+        assert "not found" in json["message"].lower()
+    
+    @pytest.mark.case("TC002")
+    def test_delete_fail_others(self, client, create_user, login):
+        """
+        Test Case: TC002
+
+        Description: Verify except admin on one able to delete user
+        """
+        create_user()
+        user = create_user(username="usr1",role="guest")
+        json = login(user.username,"TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        res = client.delete(f"/api/users/1", headers=headers)
+        json = res.get_json()
+
+        assert res.status_code == 403
+        assert "access denied" in json["error"].lower()
+
+        user = create_user(username="usr2",role="manager")
+        json = login(user.username,"TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        res = client.delete(f"/api/users/1", headers=headers)
+        json = res.get_json()
+
+        assert res.status_code == 403
+        assert "access denied" in json["error"].lower()
         
+        user = create_user(username="usr3",role="staff")
+        json = login(user.username,"TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        res = client.delete(f"/api/users/1", headers=headers)
+        json = res.get_json()
+
+        assert res.status_code == 403
+        assert "access denied" in json["error"].lower()
+        
+    @pytest.mark.case("TC003")
+    def test_delete_admin_own(self, client, create_user, login):
+        """
+        Test Case: TC003
+
+        Description: Verify admin can not delete his own id
+        """
+        user = create_user()
+        json = login(user.username,"TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        res = client.delete(f"/api/users/{user.id}", headers=headers)
+        json = res.get_json()
+
+        assert res.status_code == 400
+        assert json["code"] == 400
+        assert json["status"] == "fail"
+        assert "can not delete admin self account" in json["errors"].lower()
