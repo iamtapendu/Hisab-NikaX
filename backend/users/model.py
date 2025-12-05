@@ -46,7 +46,7 @@ class User(db.Model):
     username = db.Column(db.String(20), unique=True, nullable=False)
     name = db.Column(db.String(50), nullable=False)  
     email = db.Column(db.String(120))
-    phone = db.Column(db.Numeric(10))
+    phone = db.Column(db.String(10))
     password_hash = db.Column(db.String(200), nullable=False)
     role = db.Column(db.String(50), default="guest", nullable=False)
     image = db.Column(db.String(50), default='')

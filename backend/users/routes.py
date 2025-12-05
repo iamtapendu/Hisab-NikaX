@@ -334,7 +334,11 @@ def update_user(user_id):
         # Setting values only those are matching with regex pattern
         for field, pattern in fields.items():
             value = validate_field(data.get(field), pattern, field)
-            if value is not None or field != 'password':
+            if field == "password":
+                continue
+            elif field == "role" and user_jwt["role"]!="admin":
+                continue
+            elif value is not None:
                 setattr(user, field, value)
     
     except ValueError as e:
@@ -388,7 +392,6 @@ def update_password(user_id):
         200 OK
             JSON reponse containing successfull response.
     """
-    user = User.query.get_or_404(user_id)
     user_jwt = get_jwt_identity()
     data = request.get_json()
     
@@ -401,13 +404,15 @@ def update_password(user_id):
             code=400
         )
     # Checking only admin or self password can be changed
-    if user.id!= user_jwt["user_id"] and user_jwt["role"]!='admin':
+    if user_id!= user_jwt["user_id"] and user_jwt["role"]!='admin':
         return make_response(
             message="Not able to change password.",
             errors="User does not have admin access",
             status="fail",
             code=403
         )
+    
+    user = User.query.get_or_404(user_id)
         
     # Check for old password correctness
     if not user.check_password(data.get("old_password")):
@@ -429,7 +434,7 @@ def update_password(user_id):
 
     try:
         # validation for username
-        if validate_field(data.get("password"),PASSWORD_REGX,'password'):
+        if validate_field(data.get("new_password"),PASSWORD_REGX,'password'):
             user.set_password(data.get("new_password"))
     
     except ValueError as e:

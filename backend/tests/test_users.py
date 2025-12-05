@@ -597,8 +597,7 @@ class TestTS004:
         assert json["code"] == 403
         assert json["status"] == "fail"
         assert "user does not have admin access" in json["errors"].lower()
-        
-    
+           
     @pytest.mark.case("TC002")
     def test_get_by_username(self, client, create_user, login):
         """
@@ -710,3 +709,253 @@ class TestTS004:
 
         assert res.status_code == 401
         assert "missing authorization" in json["msg"].lower()
+
+@pytest.mark.USERS
+@pytest.mark.scenario("TS005")
+class TestTS005:
+    """
+    Module: USERS	
+
+    Test Scenario: TS005
+    
+    Description: Users able update their own data.
+    """
+    
+    @pytest.mark.case("TC001")
+    def test_update_by_user(self, client, create_user, login):
+        """
+        Test Case: TC001
+
+        Description: Verify user able to update their own data with valid data.
+        """
+        user = create_user(role="guest")
+        json = login(user.username,"TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+        payload = {"name":"User User","phone":"9876543210", "email":"user@test.com","role":"manager"}
+
+        res = client.put("/api/users/"+str(user.id), headers=headers, json=payload)
+        json = res.get_json()
+       
+        assert res.status_code == 200
+        assert json["code"] == 200
+        assert json["status"] == "success"
+        assert json["data"]["phone"] == "9876543210"
+        assert json["data"]["name"] == "User User"
+        assert json["data"]["email"] == "user@test.com"
+        assert json["data"]["role"] == "guest"
+
+        res = client.put("/api/users/"+str(2), headers=headers, json=payload)
+        json = res.get_json()
+       
+        assert res.status_code == 403
+        assert json["code"] == 403
+        assert json["status"] == "fail"
+        assert "user does not have admin access" in json["errors"].lower()
+
+        create_user(username="MyUserName")
+        res = client.put("/api/users/"+str(user.id), headers=headers, json={"username":"MyUserName"})
+        json = res.get_json()
+       
+        assert res.status_code == 409
+        assert json["code"] == 409
+        assert json["status"] == "fail"
+        assert "username already exists" in json["errors"].lower()
+
+        res = client.put("/api/users/"+str(user.id), headers=headers, json={"name":"54654"})
+        json = res.get_json()
+       
+        assert res.status_code == 400
+        assert json["code"] == 400
+        assert json["status"] == "fail"
+        assert "invalid" in json["errors"].lower()
+
+    @pytest.mark.case("TC002")
+    def test_update_by_admin(self, client, create_user, login):
+        """
+        Test Case: TC002
+
+        Description: Verify only admin able to update everyone data with valid data.
+        """
+        user = create_user()
+        json = login(user.username,"TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+        payload = {"name":"User User","phone":"9876543210", "email":"user@test.com","role":"manager"}
+
+        user2 = create_user(username="MyUserName")
+
+        res = client.put("/api/users/"+str(user2.id), headers=headers, json=payload)
+        json = res.get_json()
+       
+        assert res.status_code == 200
+        assert json["code"] == 200
+        assert json["status"] == "success"
+        assert json["data"]["phone"] == "9876543210"
+        assert json["data"]["name"] == "User User"
+        assert json["data"]["email"] == "user@test.com"
+        assert json["data"]["role"] == "manager"
+
+        res = client.put("/api/users/"+str(99), headers=headers, json=payload)
+        json = res.get_json()
+       
+        assert res.status_code == 404
+        assert json["code"] == 404
+        assert json["status"] == "fail"
+        assert "404 not found" in json["errors"].lower()
+    
+    @pytest.mark.case("TC003")
+    def test_update_duplicate_username(self, client, create_user, login):
+        """
+        Test Case: TC003
+
+        Description: Verify while updating username it must be unique.
+        """
+        user = create_user()
+        json = login(user.username,"TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        user2 = create_user(username="MyUserName")
+
+        res = client.put("/api/users/"+str(user2.id), headers=headers, json={"username":"testuser"})
+        json = res.get_json()
+       
+        assert res.status_code == 409
+        assert json["code"] == 409
+        assert json["status"] == "fail"
+        assert "username already exists" in json["errors"].lower()
+    
+    @pytest.mark.case("TC004")
+    def test_update_password_denied(self, client, create_user, login):
+        """
+        Test Case: TC004
+
+        Description: Verify admin or user not able to update password using update  api call.
+        """
+        from users.model import User
+
+        user = create_user()
+        json = login(user.username,"TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        user2 = create_user(username="MyUserName")
+
+        res = client.put("/api/users/"+str(user2.id), headers=headers, json={"password":"Password@123"})
+        json = res.get_json()
+       
+        assert res.status_code == 200
+        user2 = User.query.get_or_404(user2.id)
+        assert user2.check_password("Password@123") == False
+
+        res = client.put("/api/users/"+str(user.id), headers=headers, json={"password":"Password@123"})
+        json = res.get_json()
+       
+        assert res.status_code == 200
+        user = User.query.get_or_404(user.id)
+        assert user.check_password("Password@123") == False
+
+    @pytest.mark.case("TC005")
+    def test_update_password_api(self, client, create_user, login):
+        """
+        Test Case: TC005
+
+        Description: Verify users and admin able to change password using /api/users/<id>/password 
+        with valid old and new password
+        """
+        from users.model import User
+
+        user = create_user(role='staff')
+        user2 = create_user(username="MyUserName")
+
+        json = login(user.username,"TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        res = client.put(f"/api/users/{user.id}/password", headers=headers, 
+                         json={"old_password":"TestPass123@","new_password":"Password123@"})
+        json = res.get_json()
+       
+        assert res.status_code == 200
+        assert json["code"] == 200
+        assert json["status"] == "success"
+        user = User.query.get_or_404(user.id)
+        assert user.check_password("Password123@") == True
+
+        res = client.put(f"/api/users/{user2.id}/password", headers=headers, 
+                         json={"old_password":"TestPass123@","new_password":"Password@123"})
+        json = res.get_json()
+       
+        assert res.status_code == 403
+        assert json["code"] == 403
+        assert json["status"] == "fail"
+        assert "user does not have admin access" in json["errors"].lower()
+        user2 = User.query.get_or_404(user2.id)
+        assert user2.check_password("Password@123") == False
+        
+        json = login(user2.username,"TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        res = client.put(f"/api/users/{user.id}/password", headers=headers, 
+                         json={"old_password":"Password123@","new_password":"Password@123"})
+        json = res.get_json()
+        print(json)
+        assert res.status_code == 200
+        assert json["code"] == 200
+        assert json["status"] == "success"
+        user = User.query.get_or_404(user.id)
+        assert user.check_password("Password@123") == True
+
+        res = client.put(f"/api/users/{user2.id}/password", headers=headers, 
+                         json={"old_password":"TestPass123@","new_password":"Password@123"})
+        json = res.get_json()
+       
+        assert res.status_code == 200
+        assert json["code"] == 200
+        assert json["status"] == "success"
+        user2 = User.query.get_or_404(user2.id)
+        assert user2.check_password("Password@123") == True
+
+        res = client.put(f"/api/users/{user.id}/password", headers=headers, 
+                         json={"old_password":"", "new_password":"Password@123"})
+        json = res.get_json()
+       
+        assert res.status_code == 400
+        assert json["code"] == 400
+        assert json["status"] == "fail"
+        assert "old and new password are required" in json["errors"].lower()
+
+        res = client.put(f"/api/users/{99}/password", headers=headers, 
+                         json={"old_password":"TestPass123@", "new_password":"Password@123"})
+        json = res.get_json()
+       
+        assert res.status_code == 404
+        assert json["code"] == 404
+        assert json["status"] == "fail"
+        assert "404 not found" in json["errors"].lower()
+
+
+        res = client.put(f"/api/users/{user.id}/password", headers=headers, 
+                         json={"old_password":"TestPass123@", "new_password":"Password@123"})
+        json = res.get_json()
+       
+        assert res.status_code == 400
+        assert json["code"] == 400
+        assert json["status"] == "fail"
+        assert "incorrect old password" in json["errors"].lower()
+        
+        res = client.put(f"/api/users/{user.id}/password", headers=headers, 
+                         json={"old_password":"Password@123", "new_password":"Password@123"})
+        json = res.get_json()
+       
+        assert res.status_code == 409
+        assert json["code"] == 409
+        assert json["status"] == "fail"
+        assert "new password and old are same" in json["errors"].lower()
+        
+        res = client.put(f"/api/users/{user.id}/password", headers=headers, 
+                         json={"old_password":"Password@123", "new_password":"PasswordInvalid"})
+        json = res.get_json()
+       
+        assert res.status_code == 400
+        assert json["code"] == 400
+        assert json["status"] == "fail"
+        assert "invalid" in json["errors"].lower()
+        
+        
