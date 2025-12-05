@@ -460,7 +460,7 @@ class TestTS002:
 @pytest.mark.scenario("TS003")
 class TestTS003:
     """
-    Module: USERS	
+    Module: USERS
 
     Test Scenario: TS003
     
@@ -534,7 +534,7 @@ class TestTS003:
         assert json["data"][0]["username"] == "user_10" 
 
     @pytest.mark.case("TC003")
-    def test_get_users_without_login(self, client, create_user, login):
+    def test_get_users_without_login(self, client):
         """
         Test Case: TC003
 
@@ -546,4 +546,167 @@ class TestTS003:
         assert res.status_code == 401
         assert "missing authorization" in json["msg"].lower()
 
+
+@pytest.mark.USERS
+@pytest.mark.scenario("TS004")
+class TestTS004:
+    """
+    Module: USERS	
+
+    Test Scenario: TS004
+    
+    Description: Users only able get their own data using id or username. 
+    """
+    
+    @pytest.mark.case("TC001")
+    def test_get_by_user_id(self, client, create_user, login):
+        """
+        Test Case: TC001
+
+        Description: Verify user able to get their own data using valid id.
+        """
+        user = create_user(role="guest")
+        json = login(user.username,"TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        res = client.get("/api/users/"+str(user.id), headers=headers)
+        json = res.get_json()
+       
+        assert res.status_code == 200
+        assert json["code"] == 200
+        assert json["status"] == "success"
+        assert json["data"]["username"] == "testuser"
+        assert json["data"]["name"] == "Test User"
+        assert json["data"]["role"] == "guest"
+
+        user2 = create_user(username="user_1")
+
+        res = client.get("/api/users/"+str(user2.id), headers=headers)
+        json = res.get_json()
+       
+        assert res.status_code == 403
+        assert json["code"] == 403
+        assert json["status"] == "fail"
+        assert "user does not have admin access" in json["errors"].lower()
+
+        # sending wrong id
+        res = client.get("/api/users/"+"99", headers=headers)
+        json = res.get_json()
+
+        assert res.status_code == 403
+        assert json["code"] == 403
+        assert json["status"] == "fail"
+        assert "user does not have admin access" in json["errors"].lower()
         
+    
+    @pytest.mark.case("TC002")
+    def test_get_by_username(self, client, create_user, login):
+        """
+        Test Case: TC002
+
+        Description: Verify user able to get their own data using valid username
+        """
+        user = create_user(role="guest")
+        json = login(user.username,"TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        res = client.get("/api/users/username/"+user.username, headers=headers)
+        json = res.get_json()
+       
+        assert res.status_code == 200
+        assert json["code"] == 200
+        assert json["status"] == "success"
+        assert json["data"]["username"] == "testuser"
+        assert json["data"]["name"] == "Test User"
+        assert json["data"]["role"] == "guest"
+
+        user2 = create_user(username="user_1")
+
+        res = client.get("/api/users/username/"+user2.username, headers=headers)
+        json = res.get_json()
+       
+        assert res.status_code == 403
+        assert json["code"] == 403
+        assert json["status"] == "fail"
+        assert "user does not have admin access" in json["errors"].lower()
+
+        # wrong username
+        res = client.get("/api/users/username/"+"username", headers=headers)
+        json = res.get_json()
+       
+        assert res.status_code == 403
+        assert json["code"] == 403
+        assert json["status"] == "fail"
+        assert "user does not have admin access" in json["errors"].lower()
+
+    @pytest.mark.case("TC003")
+    def test_get_user_data_by_admin(self, client, create_user, login):
+        """
+        Test Case: TC003
+
+        Description: Verify only admin can get users data using id or username.
+        """
+        # admin account
+        user = create_user()
+        json = login(user.username,"TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        user2 = create_user(username="user_1",role="guest")
+
+        res = client.get("/api/users/"+str(user2.id), headers=headers)
+        json = res.get_json()
+       
+        assert res.status_code == 200
+        assert json["code"] == 200
+        assert json["status"] == "success"
+        assert json["data"]["username"] == "user_1"
+        assert json["data"]["name"] == "Test User"
+        assert json["data"]["role"] == "guest"
+
+        res = client.get("/api/users/username/"+user2.username, headers=headers)
+        json = res.get_json()
+       
+        assert res.status_code == 200
+        assert json["code"] == 200
+        assert json["status"] == "success"
+        assert json["data"]["username"] == "user_1"
+        assert json["data"]["name"] == "Test User"
+        assert json["data"]["role"] == "guest"
+
+        # sending wrong id
+        res = client.get("/api/users/"+"99", headers=headers)
+        json = res.get_json()
+
+        assert res.status_code == 404
+        assert json["code"] == 404
+        assert json["status"] == "fail"
+        assert "404 not found" in json["errors"].lower()
+
+        # wrong username
+        res = client.get("/api/users/username/"+"username", headers=headers)
+        json = res.get_json()
+        
+        assert res.status_code == 404
+        assert json["code"] == 404
+        assert json["status"] == "fail"
+        assert "404 not found" in json["errors"].lower()
+
+    @pytest.mark.case("TC004")
+    def test_get_user_without_login(self, client, create_user):
+        """
+        Test Case: TC004
+
+        Description: Verify without login no one able to get access
+        """
+        user = create_user()
+        res = client.get("/api/users/"+str(user.id))
+        json = res.get_json()
+
+        assert res.status_code == 401
+        assert "missing authorization" in json["msg"].lower()
+
+        res = client.get("/api/users/username/"+user.username)
+        json = res.get_json()
+
+        assert res.status_code == 401
+        assert "missing authorization" in json["msg"].lower()

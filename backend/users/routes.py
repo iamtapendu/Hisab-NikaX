@@ -159,7 +159,7 @@ def get_user_by_username(username:str):
         200 OK  
             A JSON object representing the serialized user record. 
     """
-    username_jwt = User.query.get(get_jwt_identity()["user_id"]).first().username # type: ignore
+    username_jwt = User.query.get(get_jwt_identity()["user_id"]).username # type: ignore
     if username_jwt!=username and get_jwt_identity()["role"]!="admin":
         return make_response(
             message="Not able to fetch data.",

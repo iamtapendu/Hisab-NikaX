@@ -70,9 +70,9 @@ def create_app(config_class=Config):
     def handle_404(e):
         return make_response(
             message="Resource not found",
-            status="error",
+            status="fail",
             code=404,
-            errors={"detail": str(e)}
+            errors=str(e)
         )
     
     @jwt.token_in_blocklist_loader
