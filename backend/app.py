@@ -1,6 +1,6 @@
 from flask import Flask
 from extensions import db, bcrypt, jwt, blacklist, make_response
-from werkzeug.exceptions import NotFound
+from werkzeug.exceptions import BadRequest,Unauthorized,Forbidden,NotFound,Conflict,UnprocessableEntity
 from flask_cors import CORS
 from config import Config
 import os
@@ -66,6 +66,33 @@ def create_app(config_class=Config):
     # app.register_blueprint(invoice_bp)
     # app.register_blueprint(report_bp)
 
+   
+    @app.errorhandler(BadRequest)
+    def handle_400(e):
+        return make_response(
+            message="missing fields or inputs",
+            status="fail",
+            code=404,
+            errors=str(e)
+        )
+    @app.errorhandler(Unauthorized)
+    def handle_401(e):
+        return make_response(
+            message="missing or invald token",
+            status="fail",
+            code=404,
+            errors=str(e)
+        )
+    
+    @app.errorhandler(Forbidden)
+    def handle_403(e):
+        return make_response(
+            message="forbidden not allowed",
+            status="fail",
+            code=404,
+            errors=str(e)
+        )
+    
     @app.errorhandler(NotFound)
     def handle_404(e):
         return make_response(
@@ -74,6 +101,24 @@ def create_app(config_class=Config):
             code=404,
             errors=str(e)
         )
+    @app.errorhandler(Conflict)
+    def handle_409(e):
+        return make_response(
+            message="Conflict occured",
+            status="fail",
+            code=409,
+            errors=str(e)
+        )
+    
+    @app.errorhandler(UnprocessableEntity)
+    def handle_422(e):
+        return make_response(
+            message="Unprocessable entity",
+            status="fail",
+            code=422,
+            errors=str(e)
+        )
+    
     
     @jwt.token_in_blocklist_loader
     def is_token_revoked(jwt_header, jwt_payload):

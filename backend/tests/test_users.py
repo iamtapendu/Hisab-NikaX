@@ -895,7 +895,7 @@ class TestTS005:
         res = client.put(f"/api/users/{user.id}/password", headers=headers, 
                          json={"old_password":"Password123@","new_password":"Password@123"})
         json = res.get_json()
-        print(json)
+
         assert res.status_code == 200
         assert json["code"] == 200
         assert json["status"] == "success"
