@@ -47,13 +47,13 @@ class Customer(db.Model):
         API responses. Useful for returning customer details to the frontend.
     """
 
-    __tablename__ = "Customers"
+    __tablename__ = "customers"
 
     # Table columns
     id = db.Column(db.Integer, primary_key=True)
 
     name = db.Column(db.String(50), nullable=False)
-    address = db.Column(db.String(256))
+    address = db.Column(db.Text)
     email = db.Column(db.String(50))
     phone = db.Column(db.String(10))
 
@@ -72,7 +72,7 @@ class Customer(db.Model):
     # Serialization for API responses
     def to_dict(self):
         """
-        Converts the User object into a dictionary suitable for JSON responses.
+        Converts the Customer object into a dictionary suitable for JSON responses.
 
         Returns
         -------
