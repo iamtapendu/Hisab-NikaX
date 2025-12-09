@@ -16,9 +16,9 @@ class User(db.Model):
         Unique username used for login.
     name : String(50)
         Full name of the user.
-    email : String(120)
+    email : String(50)
         User's email address.
-    phone : Numeric(10)
+    phone : String(10)
         User's phone number.
     password_hash : String(200)
         Hashed password for secure authentication.
@@ -45,7 +45,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20), unique=True, nullable=False)
     name = db.Column(db.String(50), nullable=False)  
-    email = db.Column(db.String(120))
+    email = db.Column(db.String(50))
     phone = db.Column(db.String(10))
     password_hash = db.Column(db.String(200), nullable=False)
     role = db.Column(db.String(50), default="guest", nullable=False)
