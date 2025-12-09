@@ -3,6 +3,7 @@ from app import create_app
 from extensions import db
 from config import TestConfig
 
+
 @pytest.fixture(scope="session")
 def app():
     """Create and configure a new app instance for tests."""
@@ -37,13 +38,13 @@ def pytest_itemcollected(item):
 
     # item.iter_markers() gives only actual markers, avoids bool or list issues.
     for mark in item.iter_markers():
-        if mark.name == "scenario":      # <-- Your scenario markers
+        if mark.name == "scenario":  # <-- Your scenario markers
             final_name = f" {mark.args[0]}" + final_name
-        elif mark.name == "case":            # <-- Your TC001 markers
+        elif mark.name == "case":  # <-- Your TC001 markers
             final_name += f" {mark.args[0]}"
         else:
             final_name = f"{mark.name}" + final_name
-            
+
     if final_name:
         # Rename test for report
         item._nodeid = f"{final_name}: {nodeid}"

@@ -25,11 +25,13 @@ USERNAME_REGX = r"^(?=.{3,20}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$"
 NAME_REGX = r"^[A-Za-z][A-Za-z ]{1,49}$"
 
 # Email:
-EMAIL_REGX = r'^(?!.*\.\.)' \
-           r'([A-Za-z0-9_+%-]+(?:\.[A-Za-z0-9_+%-]+)*)' \
-           r'@' \
-           r'([A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)*)' \
-           r'\.[A-Za-z]{2,5}$'
+EMAIL_REGX = (
+    r"^(?!.*\.\.)"
+    r"([A-Za-z0-9_+%-]+(?:\.[A-Za-z0-9_+%-]+)*)"
+    r"@"
+    r"([A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)*)"
+    r"\.[A-Za-z]{2,5}$"
+)
 
 # Phone:
 #  - Indian mobile numbers
@@ -39,8 +41,7 @@ PHONE_REGX = r"^[6-9]\d{9}$"
 #  - Minimum 8 characters
 #  - At least 1 uppercase, 1 lowercase, 1 digit, 1 special char
 PASSWORD_REGX = (
-    r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)"
-    r"(?=.*[@$!%*?&#^])[A-Za-z\d@$!%*?&#^]{8,}$"
+    r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)" r"(?=.*[@$!%*?&#^])[A-Za-z\d@$!%*?&#^]{8,}$"
 )
 
 # Role:
@@ -84,8 +85,8 @@ BANK_REGX = r"^\d{9,18}$"
 IFSC_REGX = r"^[A-Z]{4}0[0-9]{6}$"
 
 # PAN (Permanent Account Number)
-# - 5 letters 
-# - 4 digits 
+# - 5 letters
+# - 4 digits
 # - 1 letter
 PAN_REGX = r"^[A-Z]{5}\d{4}[A-Z]$"
 
@@ -163,9 +164,14 @@ def role_required(*roles):
             # If not authorized → return a 403 Forbidden response.
             # ------------------------------
             if user_role not in roles:
-                return jsonify({
-                    "error": "Access denied. You are not authorized for this action."
-                }), 403
+                return (
+                    jsonify(
+                        {
+                            "error": "Access denied. You are not authorized for this action."
+                        }
+                    ),
+                    403,
+                )
 
             # ------------------------------
             # Step 4: The user is authorized → proceed with the endpoint logic.
@@ -173,7 +179,9 @@ def role_required(*roles):
             return fn(*args, **kwargs)
 
         return decorator
+
     return wrapper
+
 
 def validate_field(value, pattern, field_name):
     """
@@ -182,8 +190,8 @@ def validate_field(value, pattern, field_name):
     This function is used for input validation before saving data to the
     database. If the value is not provided (None), the function returns None,
     allowing SQLAlchemy to apply model defaults. If a value is provided but
-    does not match the supplied regex pattern, a ValueError is raised. This 
-    ensures consistent validation logic across routes and prevents invalid 
+    does not match the supplied regex pattern, a ValueError is raised. This
+    ensures consistent validation logic across routes and prevents invalid
     data from being stored.
 
     Args:
@@ -211,14 +219,17 @@ def validate_field(value, pattern, field_name):
     """
     if value is None or str(value).strip() == "":
         return None  # field not provided, let model defaults apply
-    
+
     value = str(value).strip()
     if not re.fullmatch(pattern, value):
         raise ValueError(f"Invalid {field_name}.")
-    
+
     return value
 
-def make_response(data=None, message="", status="success", code=200, errors=None, pagination=None):
+
+def make_response(
+    data=None, message="", status="success", code=200, errors=None, pagination=None
+):
     """
     Generate a structured JSON response APIs.
 
@@ -238,7 +249,7 @@ def make_response(data=None, message="", status="success", code=200, errors=None
     Returns:
     -------
         tuple: Usage
-        
+
     Examples:
     ---------------
         - Simple success response
@@ -263,7 +274,6 @@ def make_response(data=None, message="", status="success", code=200, errors=None
         "message": message,
         "data": data,
         "errors": errors,
-        "pagination": pagination
+        "pagination": pagination,
     }
     return response, code
-

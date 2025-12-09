@@ -1,6 +1,7 @@
 from extensions import db, bcrypt
 from datetime import datetime, timezone
 
+
 class User(db.Model):
     """
     User model representing the application's users.
@@ -41,18 +42,21 @@ class User(db.Model):
 
     __tablename__ = "users"
 
-    # Table columns    
+    # Table columns
     id = db.Column(db.Integer, primary_key=True)
+
     username = db.Column(db.String(20), unique=True, nullable=False)
-    name = db.Column(db.String(50), nullable=False)  
+    name = db.Column(db.String(50), nullable=False)
     email = db.Column(db.String(50))
     phone = db.Column(db.String(10))
+
     password_hash = db.Column(db.String(200), nullable=False)
     role = db.Column(db.String(50), default="guest", nullable=False)
-    image = db.Column(db.String(50), default='')
+
+    image = db.Column(db.String(50), default="")
 
     # Use utc to ensure timezone-independent creation timestamp
-    created_at = db.Column(db.DateTime, default=lambda:datetime.now(timezone.utc))
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     # Password handling
     def set_password(self, password):
@@ -97,8 +101,8 @@ class User(db.Model):
             "username": self.username,
             "name": self.name,
             "email": self.email,
-            "phone": str(self.phone) if self.phone else None,  # Convert Numeric to string
+            "phone": self.phone,
             "role": self.role,
             "created_at": self.created_at.isoformat(),
-            "image": self.image
+            "image": self.image,
         }

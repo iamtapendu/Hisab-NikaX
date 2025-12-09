@@ -59,7 +59,7 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "supersecret")
     JWT_IDENTITY_CLAIM = "identity"
-    JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=30) 
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=30)
     JWT_REFRESH_TOKEN_EXPIRES = timedelta(hours=24)
     JWT_BLACKLIST_ENABLED = True
     JWT_BLACKLIST_TOKEN_CHECKS = ["access", "refresh"]
@@ -72,12 +72,12 @@ class DevelopmentConfig(Config):
 
     Use this configuration during development. Enables debug mode
     and uses a local SQLite database by default.
-    
+
     Attributes
     ----------
     DEBUG : bool
         Enables Flask debug mode for detailed error messages.
-    
+
     SQLALCHEMY_DATABASE_URI : str
         URI for the development database.
         Default: SQLite file 'database/app.db'.
@@ -91,25 +91,24 @@ class ProductionConfig(Config):
     """
     Production configuration.
 
-    Use this configuration in production environment. 
+    Use this configuration in production environment.
     Ensure environment variables are properly set for sensitive keys.
-    
+
     Attributes
     ----------
     SQLALCHEMY_DATABASE_URI : str
         URI for the production database.
         Default: SQLite file 'Database/prod.db' if no environment variable provided.
-    
+
     SECRET_KEY : str
         Should always be set via environment variable in production.
-    
+
     JWT_SECRET_KEY : str
         Should always be set via environment variable in production.
     """
 
     SQLALCHEMY_DATABASE_URI = os.getenv(
-        "DATABASE_URL",
-        f"sqlite:///{os.path.join(basedir, 'database', 'app.db')}"
+        "DATABASE_URL", f"sqlite:///{os.path.join(basedir, 'database', 'app.db')}"
     )
     DEBUG = False  # Ensure debug mode is off in production
 
