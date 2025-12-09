@@ -82,7 +82,6 @@ class User(db.Model):
         """
         return bcrypt.check_password_hash(self.password_hash, password)
 
-    
     # Serialization for API responses
     def to_dict(self):
         """
