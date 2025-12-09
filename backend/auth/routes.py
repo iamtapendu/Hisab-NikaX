@@ -3,6 +3,7 @@ from extensions import db, role_required, validate_field, make_response, blackli
     USERNAME_REGX, NAME_REGX, EMAIL_REGX, PHONE_REGX, PASSWORD_REGX, ROLE_REGX, IMAGE_REGX
 from flask_jwt_extended import create_access_token, create_refresh_token,\
     jwt_required, get_jwt_identity, get_jwt, decode_token
+from sqlalchemy import select
 from users.model import User
 from . import auth_bp
 
@@ -60,7 +61,7 @@ def register():
             code=400
         )
 
-    if User.query.filter_by(username=data["username"]).first():
+    if db.session.execute(select(User).where(User.username == data.get("username"))).scalar():
         return make_response(
             message="Not able to register user.",
             errors="Username already exists.",
@@ -135,7 +136,7 @@ def login():
             code=400
         )
     
-    user = User.query.filter_by(username=data.get("username")).first()
+    user = db.session.execute(select(User).where(User.username == data.get("username"))).scalar_one_or_none()
 
     if not user or not user.check_password(data.get("password")):
         return make_response(

@@ -1,4 +1,5 @@
 from flask import request
+from sqlalchemy import select, func
 from extensions import db, role_required, validate_field, make_response,\
     USERNAME_REGX, NAME_REGX, EMAIL_REGX, PHONE_REGX, PASSWORD_REGX, ROLE_REGX, IMAGE_REGX
 from flask_jwt_extended import get_jwt_identity,jwt_required
@@ -55,22 +56,22 @@ def get_users():
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 50, type=int)
 
-    # Paginate user query
-    pagination = User.query.paginate(
-        page=page,
-        per_page=per_page,
-        error_out=False
-    )
+    # Paginate user
+    stmt = select(User).order_by(User.id).offset((page-1)*per_page).limit(per_page)
+    users = db.session.execute(stmt).scalars().all()
+
+    total = db.session.execute(select(func.count()).select_from(User)).scalar()
+    pages = (total+per_page-1)//per_page if total else 0
 
     pg_dict = {
-        "page": pagination.page,
-        "per_page": pagination.per_page,
-        "total": pagination.total,
-        "pages": pagination.pages
+        "page": page,
+        "per_page": per_page,
+        "total": total,
+        "pages": pages
     }
 
     return make_response(
-        data=[u.to_dict() for u in pagination.items],
+        data=[u.to_dict() for u in users],
         message="Successfully retrive data.",
         pagination=pg_dict   
     )
@@ -120,7 +121,14 @@ def get_user(user_id:int):
             code=403
         )
     
-    user = User.query.get_or_404(user_id)
+    user = db.session.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
+    if user is None:
+        return make_response(
+            message="Not able to fetch data.",
+            errors="User not found",
+            status="fail",
+            code=404
+        )
     return make_response(data=user.to_dict(),message="Successfully retrive data.")
 
 
@@ -159,16 +167,30 @@ def get_user_by_username(username:str):
         200 OK  
             A JSON object representing the serialized user record. 
     """
-    username_jwt = User.query.get(get_jwt_identity()["user_id"]).username # type: ignore
-    if username_jwt!=username and get_jwt_identity()["role"]!="admin":
+    requestor = db.session.execute(
+        select(User)
+        .where(User.id == get_jwt_identity()["user_id"])
+        ).scalar_one()
+    
+    if requestor.username!=username and requestor.role!="admin":
         return make_response(
             message="Not able to fetch data.",
             errors="Requesting user does not have admin access",
             status="fail",
             code=403
         )
+    elif requestor.username == username:
+        make_response(data=requestor.to_dict(),message="Successfully retrive data.")
+        
     # Get user or return 404
-    user = User.query.filter_by(username=username).first_or_404()
+    user = db.session.execute(select(User).where(User.username == username)).scalar_one_or_none()
+    if user is None:
+        return make_response(
+            message="Not able to fetch data.",
+            errors="User not found",
+            status="fail",
+            code=404
+        )
 
     return make_response(data=user.to_dict(),message="Successfully retrive data.")
 
@@ -223,7 +245,7 @@ def create_user():
         )
 
     # Check username uniqueness
-    if User.query.filter_by(username=data["username"]).first():
+    if db.session.execute(select(User).where(User.username == data.get("username"))).scalar():
         return make_response(
             message="Not able to create user.",
             errors="Username already exists.",
@@ -316,14 +338,21 @@ def update_user(user_id):
             code=403
         )
 
-    user = User.query.get_or_404(user_id)
+    user = db.session.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
+    if user is None:
+        return make_response(
+            message="Not able to fetch data.",
+            errors="User not found",
+            status="fail",
+            code=404
+        )
     data = request.get_json()
     
     try:
         # validation for username
         if validate_field(data.get("username"),USERNAME_REGX,'username'):
             if user.username != data.get("username"): # checking whether new and old username same or not 
-                if User.query.filter_by(username=data["username"]).first():
+                if db.session.execute(select(User).where(User.username == data.get("username"))).scalar():
                     return make_response(
                         message="Not able to update user.",
                         errors="Username already exists.",
@@ -412,7 +441,14 @@ def update_password(user_id):
             code=403
         )
     
-    user = User.query.get_or_404(user_id)
+    user = db.session.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
+    if user is None:
+        return make_response(
+            message="Not able to fetch data.",
+            errors="User not found",
+            status="fail",
+            code=404
+        )
         
     # Check for old password correctness
     if not user.check_password(data.get("old_password")):
@@ -498,8 +534,15 @@ def delete_user(user_id):
             status="fail",
             code=400
         )
-    user = User.query.get_or_404(user_id)
-
+    
+    user = db.session.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
+    if user is None:
+        return make_response(
+            message="Not able to fetch data.",
+            errors="User not found",
+            status="fail",
+            code=404
+        )
     db.session.delete(user)
     db.session.commit()
 

@@ -1,5 +1,7 @@
 import os
 import pytest
+from sqlalchemy import select
+from extensions import db
 from flask_jwt_extended import decode_token
 
 # ---------------- FIXTURES ---------------- #
@@ -523,6 +525,10 @@ class TestTS003:
         assert json["code"] == 200
         assert json["status"] == "success"
         assert len(json["data"]) == 10
+        assert json["pagination"]["page"] == 1
+        assert json["pagination"]["per_page"] == 10
+        assert json["pagination"]["pages"] == 2
+        assert json["pagination"]["total"] == 15
 
         res = client.get("/api/users/?page=2&per_page=10", headers=headers)
         json = res.get_json()
@@ -532,6 +538,10 @@ class TestTS003:
         assert json["status"] == "success"
         assert len(json["data"]) == 5
         assert json["data"][0]["username"] == "user_10" 
+        assert json["pagination"]["page"] == 2
+        assert json["pagination"]["per_page"] == 10
+        assert json["pagination"]["pages"] == 2
+        assert json["pagination"]["total"] == 15
 
     @pytest.mark.case("TC003")
     def test_get_users_without_login(self, client):
@@ -679,7 +689,7 @@ class TestTS004:
         assert res.status_code == 404
         assert json["code"] == 404
         assert json["status"] == "fail"
-        assert "404 not found" in json["errors"].lower()
+        assert "user not found" in json["errors"].lower()
 
         # wrong username
         res = client.get("/api/users/username/"+"username", headers=headers)
@@ -688,7 +698,7 @@ class TestTS004:
         assert res.status_code == 404
         assert json["code"] == 404
         assert json["status"] == "fail"
-        assert "404 not found" in json["errors"].lower()
+        assert "user not found" in json["errors"].lower()
 
     @pytest.mark.case("TC004")
     def test_get_user_without_login(self, client, create_user):
@@ -800,7 +810,7 @@ class TestTS005:
         assert res.status_code == 404
         assert json["code"] == 404
         assert json["status"] == "fail"
-        assert "404 not found" in json["errors"].lower()
+        assert "user not found" in json["errors"].lower()
     
     @pytest.mark.case("TC003")
     def test_update_duplicate_username(self, client, create_user, login):
@@ -842,14 +852,14 @@ class TestTS005:
         json = res.get_json()
        
         assert res.status_code == 200
-        user2 = User.query.get_or_404(user2.id)
+        user2 = db.session.execute(select(User).where(User.id == user2.id)).scalar_one()
         assert user2.check_password("Password@123") == False
 
         res = client.put("/api/users/"+str(user.id), headers=headers, json={"password":"Password@123"})
         json = res.get_json()
        
         assert res.status_code == 200
-        user = User.query.get_or_404(user.id)
+        user = db.session.execute(select(User).where(User.id == user.id)).scalar_one()
         assert user.check_password("Password@123") == False
 
     @pytest.mark.case("TC005")
@@ -875,7 +885,7 @@ class TestTS005:
         assert res.status_code == 200
         assert json["code"] == 200
         assert json["status"] == "success"
-        user = User.query.get_or_404(user.id)
+        user = db.session.execute(select(User).where(User.id == user.id)).scalar_one()
         assert user.check_password("Password123@") == True
 
         res = client.put(f"/api/users/{user2.id}/password", headers=headers, 
@@ -886,7 +896,7 @@ class TestTS005:
         assert json["code"] == 403
         assert json["status"] == "fail"
         assert "user does not have admin access" in json["errors"].lower()
-        user2 = User.query.get_or_404(user2.id)
+        user2 = db.session.execute(select(User).where(User.id == user2.id)).scalar_one()
         assert user2.check_password("Password@123") == False
         
         json = login(user2.username,"TestPass123@")
@@ -899,7 +909,7 @@ class TestTS005:
         assert res.status_code == 200
         assert json["code"] == 200
         assert json["status"] == "success"
-        user = User.query.get_or_404(user.id)
+        user = db.session.execute(select(User).where(User.id == user.id)).scalar_one()
         assert user.check_password("Password@123") == True
 
         res = client.put(f"/api/users/{user2.id}/password", headers=headers, 
@@ -909,7 +919,7 @@ class TestTS005:
         assert res.status_code == 200
         assert json["code"] == 200
         assert json["status"] == "success"
-        user2 = User.query.get_or_404(user2.id)
+        user2 = db.session.execute(select(User).where(User.id == user2.id)).scalar_one()
         assert user2.check_password("Password@123") == True
 
         res = client.put(f"/api/users/{user.id}/password", headers=headers, 
@@ -928,7 +938,7 @@ class TestTS005:
         assert res.status_code == 404
         assert json["code"] == 404
         assert json["status"] == "fail"
-        assert "404 not found" in json["errors"].lower()
+        assert "user not found" in json["errors"].lower()
 
 
         res = client.put(f"/api/users/{user.id}/password", headers=headers, 
@@ -1004,7 +1014,7 @@ class TestTS006:
         assert res.status_code == 404
         assert json["code"] == 404
         assert json["status"] == "fail"
-        assert "not found" in json["message"].lower()
+        assert "user not found" in json["errors"].lower()
     
     @pytest.mark.case("TC002")
     def test_delete_fail_others(self, client, create_user, login):
