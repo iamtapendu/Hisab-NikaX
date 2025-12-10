@@ -45,8 +45,15 @@ PASSWORD_REGX = (
 )
 
 # Role:
-#   "admin", "manager", "staff", "guest"
-ROLE_REGX = r"admin|manager|staff|guest"
+# "admin", "manager", "staff", "guest"
+ROLE_REGX = r"^(admin|manager|staff|guest)$"
+
+# Payment status:
+# "paid", "pending" and "partial"
+PAYMENT_STATUS_REGEX = r"^(paid|pending|partial)$"
+
+# Unit:
+UNIT_REGEX = r"^(pcs|kg|gram|grs|ltr|ml|box|pkt|set|dozen)$"
 
 # Image filename:
 #  - only JPG/PNG/JPEG
@@ -89,6 +96,13 @@ IFSC_REGX = r"^[A-Z]{4}0[0-9]{6}$"
 # - 4 digits
 # - 1 letter
 PAN_REGX = r"^[A-Z]{5}\d{4}[A-Z]$"
+
+#Numeric
+# int, float, negative, optional decimals
+NUM_REGEX = r"^-?\d+(\.\d+)?$"
+
+#HSN Code
+HSN_REGEX = r"^\d{4}(\d{2})?(\d{2})?$"
 
 
 def role_required(*roles):
