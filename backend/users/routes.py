@@ -503,8 +503,7 @@ def delete_user(user_id):
     Delete a user by ID.
 
     This endpoint permanently removes a user record from the database based on
-    the provided user ID. Typically used in admin dashboards for user
-    management and cleanup operations.
+    the provided user ID.
 
     Access:
     -------
