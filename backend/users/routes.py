@@ -1,5 +1,8 @@
 from flask import request
 from sqlalchemy import select, func
+from flask_jwt_extended import get_jwt_identity, jwt_required
+from .model import User
+from . import users_bp
 from extensions import (
     db,
     role_required,
@@ -13,9 +16,6 @@ from extensions import (
     ROLE_REGX,
     IMAGE_REGX,
 )
-from flask_jwt_extended import get_jwt_identity, jwt_required
-from .model import User
-from . import users_bp
 
 # Users fileds and thier respective regex
 fields = {
