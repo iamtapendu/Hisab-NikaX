@@ -36,7 +36,7 @@ class Product(db.Model):
     Methods
     -------
         to_dict()
-            Serializes the product object into a dictionary suitable for JSON
+            Serializes the Product object into a dictionary suitable for JSON
             API responses. Useful for returning product details to the frontend.
     """
 
