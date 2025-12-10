@@ -37,8 +37,7 @@ def get_users():
 
     This endpoint returns user records in paginated form, helping the frontend
     efficiently load users in pages (e.g., 50 per request) instead of fetching
-    all records at once. Ideal for admin dashboards, management tables, and
-    any screen displaying large datasets.
+    all records at once. 
 
     Access:
     -------
