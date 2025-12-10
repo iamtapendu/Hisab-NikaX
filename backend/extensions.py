@@ -217,13 +217,24 @@ def validate_field(value, pattern, field_name):
         >>> validate_field("wrong@", EMAIL_REGEX, "email")
         ValueError: Invalid email.
     """
-    if value is None or str(value).strip() == "":
+    if value is None or (isinstance(value, str) and value.strip() == ""):
         return None  # field not provided, let model defaults apply
+    
+    original_type = type(value)
 
     value = str(value).strip()
     if not re.fullmatch(pattern, value):
         raise ValueError(f"Invalid {field_name}.")
 
+    # Convert back to original type
+    if original_type is int:
+        return int(value)
+    if original_type is float:
+        return float(value)
+    if original_type is bool:
+        # Accept "true"/"false"/"1"/"0"
+        return value.lower() in ("true", "1")
+    
     return value
 
 
