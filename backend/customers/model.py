@@ -40,6 +40,10 @@ class Customer(db.Model):
         Timestamp when the customer record was created.
         Defaults to the current UTC time.
 
+    Relationships
+    -------------
+        invoices: List of invoices in Invoices table.
+
     Methods
     -------
     to_dict()
@@ -65,6 +69,11 @@ class Customer(db.Model):
     bank_ifsc = db.Column(db.String(11))
 
     image = db.Column(db.String(50), default="")
+
+    # Invoices reference
+    invoices = db.relationship(
+        "Invoice", backref="customer", cascade="all, delete-orphan"
+    )
 
     # Use utc to ensure timezone-independent creation timestamp
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
@@ -92,4 +101,5 @@ class Customer(db.Model):
             "bank_ifsc": self.bank_ifsc,
             "image": self.image,
             "created_at": self.created_at,
+            "invoices": [invoice.to_dict() for invoice in self.invoices]
         }
