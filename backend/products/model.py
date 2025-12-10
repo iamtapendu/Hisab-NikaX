@@ -1,6 +1,7 @@
 from extensions import db
 from datetime import datetime, timezone
 
+
 class Product(db.Model):
     """
     Product model for the ERP system.
@@ -11,7 +12,7 @@ class Product(db.Model):
     Columns
     -------
         id (int): Unique product ID (Primary Key).
-        
+
         name (str): Product name.
         description (str): Optional long text describing the product.
 
@@ -24,7 +25,7 @@ class Product(db.Model):
 
         quantity (int): Number of units currently in stock.
         unit (str): Unit of measurement (e.g., pcs, box, kg).
-        
+
         brand (str): Product brand.
         model (str): Product model number or identifier.
 
@@ -42,7 +43,7 @@ class Product(db.Model):
     __tablename__ = "products"
 
     id = db.Column(db.Integer, primary_key=True)
-    
+
     # Basic details
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
@@ -54,7 +55,7 @@ class Product(db.Model):
 
     # GST
     hsn_code = db.Column(db.String(10))
-    gst = db.Column(db.Float)   
+    gst = db.Column(db.Float)
 
     # Stock
     quantity = db.Column(db.Integer, default=0)
@@ -90,5 +91,5 @@ class Product(db.Model):
             "brand": self.brand,
             "model": self.model,
             "image": self.image,
-            "created_at": self.created_at
+            "created_at": self.created_at,
         }
