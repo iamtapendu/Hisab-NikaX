@@ -66,16 +66,8 @@ def get_products():
         JSON Response
     """
     # Pagination metadata
-    page = request.args.get(
-        "page",
-        1,
-        type=int,
-    )
-    per_page = request.args.get(
-        "per_page",
-        50,
-        type=int,
-    )
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get("per_page", 50, type=int)
 
     # Paginate product
     stmt = select(Product).order_by(Product.id).offset((page - 1) * per_page).limit(per_page)
@@ -184,17 +176,8 @@ def search_products():
     """
 
     # Query params
-    keyword = request.args.get(
-        "q",
-        "",
-        type=str,
-    ).strip()
-
-    per_page = request.args.get(
-        "per_page",
-        50,
-        type=int,
-    )
+    keyword = request.args.get("q", "", type=str).strip()
+    per_page = request.args.get("per_page", 50, type=int)
 
     stmt = select(Product)
 
