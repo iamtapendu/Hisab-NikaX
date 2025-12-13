@@ -858,9 +858,7 @@ class TestTS005:
         assert json["status"] == "fail"
         assert "username already exists" in json["errors"].lower()
 
-        res = client.put(
-            "/api/users/" + str(user.id), headers=headers, json={"name": "54654"}
-        )
+        res = client.put("/api/users/" + str(user.id), headers=headers, json={"name": "54654"})
         json = res.get_json()
 
         assert res.status_code == 400
