@@ -342,9 +342,7 @@ class TestTS005:
         refresh = login["data"]["refresh_token"]
 
         headers = {"Authorization": f"Bearer {access}"}
-        res = client.post(
-            "/api/auth/logout", json={"refresh_token": refresh}, headers=headers
-        )
+        res = client.post("/api/auth/logout", json={"refresh_token": refresh}, headers=headers)
 
         json = res.get_json()
         assert res.status_code == 200
@@ -378,9 +376,7 @@ class TestTS005:
         refresh = login["data"]["refresh_token"]
 
         headers = {"Authorization": f"Bearer {access}"}
-        res = client.post(
-            "/api/auth/logout", json={"refresh_token": refresh}, headers=headers
-        )
+        res = client.post("/api/auth/logout", json={"refresh_token": refresh}, headers=headers)
 
         # both tokens should be blacklisted
         access_jti = decode_token(access)["jti"]
@@ -415,18 +411,14 @@ class TestTS005:
 
         # sending wrong headers
         headers = {"Authorization": f"Bearer {refresh}"}
-        res = client.post(
-            "/api/auth/logout", json={"refresh_token": access}, headers=headers
-        )
+        res = client.post("/api/auth/logout", json={"refresh_token": access}, headers=headers)
 
         json = res.get_json()
         assert res.status_code == 422
 
         # sending access token in place of refresh token
         headers = {"Authorization": f"Bearer {access}"}
-        res = client.post(
-            "/api/auth/logout", json={"refresh_token": access}, headers=headers
-        )
+        res = client.post("/api/auth/logout", json={"refresh_token": access}, headers=headers)
 
         json = res.get_json()
         assert res.status_code == 400
@@ -436,9 +428,7 @@ class TestTS005:
 
         # not sending refresh token
         headers = {"Authorization": f"Bearer {access}"}
-        res = client.post(
-            "/api/auth/logout", json={"refresh_token": ""}, headers=headers
-        )
+        res = client.post("/api/auth/logout", json={"refresh_token": ""}, headers=headers)
 
         json = res.get_json()
         assert res.status_code == 400
