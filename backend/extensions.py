@@ -2,7 +2,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager, verify_jwt_in_request, get_jwt_identity
 from functools import wraps
-from flask import jsonify
+from flask import abort
 import re
 
 # Initialize shared Flask extensions (attached to the app in create_app)
@@ -178,14 +178,8 @@ def role_required(*roles):
             # If not authorized → return a 403 Forbidden response.
             # ------------------------------
             if user_role not in roles:
-                return (
-                    jsonify(
-                        {
-                            "error": "Access denied. You are not authorized for this action."
-                        }
-                    ),
-                    403,
-                )
+               abort(403, description="Forbidden Access denied. You are not authorized for this action.")
+                        
 
             # ------------------------------
             # Step 4: The user is authorized → proceed with the endpoint logic.

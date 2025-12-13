@@ -10,7 +10,6 @@ from werkzeug.exceptions import (
 )
 from flask_cors import CORS
 from config import Config
-import os
 
 
 def create_app(config_class=Config):
@@ -79,19 +78,19 @@ def create_app(config_class=Config):
     @app.errorhandler(BadRequest)
     def handle_400(e):
         return make_response(
-            message="missing fields or inputs", status="fail", code=404, errors=str(e)
+            message="missing fields or inputs", status="fail", code=400, errors=str(e)
         )
 
     @app.errorhandler(Unauthorized)
     def handle_401(e):
         return make_response(
-            message="missing or invald token", status="fail", code=404, errors=str(e)
+            message="missing or invald token", status="fail", code=401, errors=str(e)
         )
 
     @app.errorhandler(Forbidden)
     def handle_403(e):
         return make_response(
-            message="forbidden not allowed", status="fail", code=404, errors=str(e)
+            message="forbidden not allowed", status="fail", code=403, errors=str(e)
         )
 
     @app.errorhandler(NotFound)
@@ -128,6 +127,12 @@ if __name__ == "__main__":
     # This runs only when the script is executed directly
     with app.app_context():
         db.create_all()
+        # from users.model import User
+        # user = User(username="admin", name="admin")
+        # user.set_password("Password@123")
+
+        # db.session.add(user)
+        # db.session.commit()
 
     # Start the Flask development server
     # Use environment variables to configure host/port in production
