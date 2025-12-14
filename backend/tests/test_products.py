@@ -1083,3 +1083,160 @@ class TestTS003:
             assert json["code"] == 400
             assert json["status"] == "fail"
             assert "invalid" in json["errors"].lower()
+
+
+@pytest.mark.PRODUCTS
+@pytest.mark.scenario("TS004")
+class TestTS004:
+    """
+    Module: PRODUCTS
+
+    Test Scenario: TS004
+
+    Description: Users with valid login credentials along with role able to update new product
+    """
+
+    @pytest.mark.case("TC001")
+    def test_update_product_without_login(self, client, create_product):
+        """
+        Test Case: TC001
+
+        Description: Verify without valid login credential no able to update products api
+        """
+        create_product(name="product")
+        payload = {"name": "Product", "buy_price": "100", "sell_price": "110"}
+        res = client.put("/api/products/1", json=payload)
+        json = res.get_json()
+
+        assert res.status_code == 401
+        assert json["code"] == 401
+        assert json["status"] == "fail"
+        assert "missing " in json["errors"].lower()
+
+    @pytest.mark.case("TC002")
+    def test_update_product_with_different_roles(self, client, create_user, login, create_product):
+        """
+        Test Case: TC002
+
+        Description: Verify with only manager, admin roles are allowed for update api
+        """
+        create_product(name="old name")
+        payload = {"name": "new name"}
+        guest = create_user(username="usr1", role="guest")
+        json = login(guest.username, "TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        res = client.put("/api/products/1", headers=headers, json=payload)
+        json = res.get_json()
+
+        assert res.status_code == 403
+        assert json["code"] == 403
+        assert json["status"] == "fail"
+        assert "forbidden" in json["errors"].lower()
+
+        staff = create_user(username="usr2", role="staff")
+        json = login(staff.username, "TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        res = client.put("/api/products/1", headers=headers, json=payload)
+        json = res.get_json()
+
+        assert res.status_code == 403
+        assert json["code"] == 403
+        assert json["status"] == "fail"
+
+        manager = create_user(username="usr3", role="manager")
+        json = login(manager.username, "TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        res = client.put("/api/products/1", headers=headers, json=payload)
+        json = res.get_json()
+
+        assert res.status_code == 200
+        assert json["code"] == 200
+        assert json["status"] == "success"
+        assert json["data"]["name"] == "new name"
+
+        admin = create_user(username="usr4", role="admin")
+        json = login(admin.username, "TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        payload = {"buy_price": "500", "sell_price": "600"}
+        res = client.put("/api/products/1", headers=headers, json=payload)
+        json = res.get_json()
+
+        assert res.status_code == 200
+        assert json["code"] == 200
+        assert json["status"] == "success"
+        assert json["data"]["buy_price"] == 500.0
+        assert json["data"]["sell_price"] == 600.0
+
+    @pytest.mark.case("TC003")
+    def test_update_product_with_invalid_id(self, client, create_user, login, create_product):
+        """
+        Test Case: TC003
+
+        Description: Verify users not able to update product with invalid id
+        """
+        create_product("product")
+
+        admin = create_user(username="usr4", role="admin")
+        json = login(admin.username, "TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        payload = {"buy_price": "500", "sell_price": "600"}
+        res = client.put("/api/products/2", headers=headers, json=payload)
+        json = res.get_json()
+
+        assert res.status_code == 404
+        assert json["code"] == 404
+        assert json["status"] == "fail"
+        assert "not found" in json["errors"].lower()
+    
+    @pytest.mark.case("TC004")
+    def test_update_product_duplicate_name(self, client, create_user, login, create_product):
+        """
+        Test Case: TC004
+
+        Description: Verify users not able to update product with duplicate name
+        """
+        admin = create_user(username="usr4", role="admin")
+        json = login(admin.username, "TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        create_product("Product 1")
+        create_product("Product 2")
+
+        payload = {"name": "Product 2", "buy_price": "100", "sell_price": "120"}
+        res = client.put("/api/products/1", headers=headers, json=payload)
+        json = res.get_json()
+
+        assert res.status_code == 409
+        assert json["code"] == 409
+        assert json["status"] == "fail"
+        assert "product name already exists" in json["errors"].lower()
+
+    @pytest.mark.case("TC005")
+    def test_create_product_invalid_quantity(self, client, create_user, login, create_product):
+        """
+        Test Case: TC005
+
+        Description: Verify users not able to update product with invalid data
+        """
+
+        # Admin account
+        user = create_user()
+        json = login(user.username, "TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        create_product("product")
+        payload = {"quantity": "--100"}
+        res = client.put("/api/products/1", headers=headers, json=payload)
+        json = res.get_json()
+
+        assert res.status_code == 400
+        assert json["code"] == 400
+        assert json["status"] == "fail"
+        assert "invalid" in json["errors"].lower()
+
+
