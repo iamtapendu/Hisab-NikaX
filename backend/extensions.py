@@ -1,6 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager, verify_jwt_in_request, get_jwt_identity
+from flask_jwt_extended.exceptions import NoAuthorizationError
 from functools import wraps
 from flask import abort
 import re
@@ -40,9 +41,7 @@ PHONE_REGX = r"^[6-9]\d{9}$"
 # Password:
 #  - Minimum 8 characters
 #  - At least 1 uppercase, 1 lowercase, 1 digit, 1 special char
-PASSWORD_REGX = (
-    r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)" r"(?=.*[@$!%*?&#^])[A-Za-z\d@$!%*?&#^]{8,}$"
-)
+PASSWORD_REGX = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)" r"(?=.*[@$!%*?&#^])[A-Za-z\d@$!%*?&#^]{8,}$"
 
 # Role:
 # "admin", "manager", "staff", "guest"
@@ -97,11 +96,11 @@ IFSC_REGX = r"^[A-Z]{4}0[0-9]{6}$"
 # - 1 letter
 PAN_REGX = r"^[A-Z]{5}\d{4}[A-Z]$"
 
-#Numeric
+# Numeric
 # int, float, negative, optional decimals
 NUM_REGEX = r"^-?\d+(\.\d+)?$"
 
-#HSN Code
+# HSN Code
 HSN_REGEX = r"^\d{4}(\d{2})?(\d{2})?$"
 
 
@@ -163,7 +162,11 @@ def role_required(*roles):
             # If JWT is missing or invalid, Flask-JWT-Extended will return
             # a 401/422 response automatically.
             # ------------------------------
-            verify_jwt_in_request()
+            try:
+                verify_jwt_in_request()
+                
+            except NoAuthorizationError as e:
+                abort(401, description=str(e))
 
             # ------------------------------
             # Step 2: Extract user identity from the token payload.
@@ -178,8 +181,10 @@ def role_required(*roles):
             # If not authorized → return a 403 Forbidden response.
             # ------------------------------
             if user_role not in roles:
-               abort(403, description="Forbidden Access denied. You are not authorized for this action.")
-                        
+                abort(
+                    403,
+                    description="Forbidden Access denied. You are not authorized for this action.",
+                )
 
             # ------------------------------
             # Step 4: The user is authorized → proceed with the endpoint logic.
@@ -227,7 +232,7 @@ def validate_field(value, pattern, field_name):
     """
     if value is None or (isinstance(value, str) and value.strip() == ""):
         return None  # field not provided, let model defaults apply
-    
+
     original_type = type(value)
 
     value = str(value).strip()
@@ -242,13 +247,11 @@ def validate_field(value, pattern, field_name):
     if original_type is bool:
         # Accept "true"/"false"/"1"/"0"
         return value.lower() in ("true", "1")
-    
+
     return value
 
 
-def make_response(
-    data=None, message="", status="success", code=200, errors=None, pagination=None
-):
+def make_response(data=None, message="", status="success", code=200, errors=None, pagination=None):
     """
     Generate a structured JSON response APIs.
 
