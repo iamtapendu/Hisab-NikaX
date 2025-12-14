@@ -95,21 +95,15 @@ def create_app(config_class=Config):
 
     @app.errorhandler(NotFound)
     def handle_404(e):
-        return make_response(
-            message="Resource not found", status="fail", code=404, errors=str(e)
-        )
+        return make_response(message="Resource not found", status="fail", code=404, errors=str(e))
 
     @app.errorhandler(Conflict)
     def handle_409(e):
-        return make_response(
-            message="Conflict occured", status="fail", code=409, errors=str(e)
-        )
+        return make_response(message="Conflict occured", status="fail", code=409, errors=str(e))
 
     @app.errorhandler(UnprocessableEntity)
     def handle_422(e):
-        return make_response(
-            message="Unprocessable entity", status="fail", code=422, errors=str(e)
-        )
+        return make_response(message="Unprocessable entity", status="fail", code=422, errors=str(e))
 
     @jwt.token_in_blocklist_loader
     def is_token_revoked(jwt_header, jwt_payload):
