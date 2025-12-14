@@ -17,6 +17,8 @@ pluggy==1.6.0
 Pygments==2.19.2
 PyJWT==2.10.1
 pytest==9.0.1
+pytest-html==4.1.1
+pytest-metadata==3.1.1
 pytz==2025.2
 regex==2025.11.3
 SQLAlchemy==2.0.44
