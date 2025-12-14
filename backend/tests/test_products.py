@@ -988,7 +988,7 @@ class TestTS003:
             assert json["code"] == 400
             assert json["status"] == "fail"
             assert "invalid" in json["errors"].lower()
-    
+
     @pytest.mark.case("TC015")
     def test_create_product_invalid_model(self, client, create_user, login):
         """
@@ -1192,7 +1192,7 @@ class TestTS004:
         assert json["code"] == 404
         assert json["status"] == "fail"
         assert "not found" in json["errors"].lower()
-    
+
     @pytest.mark.case("TC004")
     def test_update_product_duplicate_name(self, client, create_user, login, create_product):
         """
@@ -1240,3 +1240,103 @@ class TestTS004:
         assert "invalid" in json["errors"].lower()
 
 
+@pytest.mark.PRODUCTS
+@pytest.mark.scenario("TS005")
+class TestTS005:
+    """
+    Module: PRODUCTS
+
+    Test Scenario: TS005
+
+    Description: Users with valid login credentials along with role able to delete product
+    """
+
+    @pytest.mark.case("TC001")
+    def test_delete_product_without_login(self, client, create_product):
+        """
+        Test Case: TC001
+
+        Description: Verify without valid login credential no able to delete products api
+        """
+        create_product(name="product")
+        res = client.delete("/api/products/1")
+        json = res.get_json()
+
+        assert res.status_code == 401
+        assert json["code"] == 401
+        assert json["status"] == "fail"
+        assert "missing " in json["errors"].lower()
+
+    @pytest.mark.case("TC002")
+    def test_delete_product_with_different_roles(self, client, create_user, login, create_product):
+        """
+        Test Case: TC002
+
+        Description: Verify with only admin are allowed for delete product api
+        """
+        create_product(name="product")
+        guest = create_user(username="usr1", role="guest")
+        json = login(guest.username, "TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        res = client.delete("/api/products/1", headers=headers)
+        json = res.get_json()
+
+        assert res.status_code == 403
+        assert json["code"] == 403
+        assert json["status"] == "fail"
+        assert "forbidden" in json["errors"].lower()
+
+        staff = create_user(username="usr2", role="staff")
+        json = login(staff.username, "TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        res = client.delete("/api/products/1", headers=headers)
+        json = res.get_json()
+
+        assert res.status_code == 403
+        assert json["code"] == 403
+        assert json["status"] == "fail"
+
+        manager = create_user(username="usr3", role="manager")
+        json = login(manager.username, "TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        res = client.delete("/api/products/1", headers=headers)
+        json = res.get_json()
+
+        assert res.status_code == 403
+        assert json["code"] == 403
+        assert json["status"] == "fail"
+
+        admin = create_user(username="usr4", role="admin")
+        json = login(admin.username, "TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        res = client.delete("/api/products/1", headers=headers)
+        json = res.get_json()
+
+        assert res.status_code == 200
+        assert json["code"] == 200
+        assert json["status"] == "success"
+
+    @pytest.mark.case("TC003")
+    def test_update_product_with_invalid_id(self, client, create_user, login, create_product):
+        """
+        Test Case: TC003
+
+        Description: Verify users not able to update product with invalid id
+        """
+        create_product("product")
+
+        admin = create_user(username="usr4", role="admin")
+        json = login(admin.username, "TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        res = client.put("/api/products/2", headers=headers)
+        json = res.get_json()
+
+        assert res.status_code == 404
+        assert json["code"] == 404
+        assert json["status"] == "fail"
+        assert "not found" in json["errors"].lower()
