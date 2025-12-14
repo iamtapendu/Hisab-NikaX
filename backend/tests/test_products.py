@@ -398,3 +398,152 @@ class TestTS002:
         assert json["code"] == 200
         assert json["status"] == "success"
         assert len(json["data"]) == 2
+
+
+@pytest.mark.PRODUCTS
+@pytest.mark.scenario("TS003")
+class TestTS003:
+    """
+    Module: PRODUCTS
+
+    Test Scenario: TS003
+
+    Description: Users with valid login credentials along with role able to create new product
+    """
+
+    @pytest.mark.case("TC001")
+    def test_create_product_without_login(self, client):
+        """
+        Test Case: TC001
+
+        Description: Verify without valid login credential no able to create products api
+        """
+        payload = {"name": "Product", "buy_price": "100", "sell_price": "110"}
+        res = client.post("/api/products/", json=payload)
+        json = res.get_json()
+
+        assert res.status_code == 401
+        assert json["code"] == 401
+        assert json["status"] == "fail"
+        assert "missing " in json["errors"].lower()
+
+    @pytest.mark.case("TC002")
+    def test_create_product_with_different_roles(self, client, create_user, login):
+        """
+        Test Case: TC002
+
+        Description: Verify with only manager, admin roles are allowed for product create api
+        """
+        payload = {"name": "Product", "buy_price": "100", "sell_price": "110"}
+        guest = create_user(username="usr1", role="guest")
+        json = login(guest.username, "TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        res = client.post("/api/products/", headers=headers, json=payload)
+        json = res.get_json()
+
+        assert res.status_code == 403
+        assert json["code"] == 403
+        assert json["status"] == "fail"
+        assert "forbidden" in json["errors"].lower()
+
+        staff = create_user(username="usr2", role="staff")
+        json = login(staff.username, "TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        res = client.post("/api/products/", headers=headers, json=payload)
+        json = res.get_json()
+
+        assert res.status_code == 403
+        assert json["code"] == 403
+        assert json["status"] == "fail"
+
+        manager = create_user(username="usr3", role="manager")
+        json = login(manager.username, "TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        res = client.post("/api/products/", headers=headers, json=payload)
+        json = res.get_json()
+
+        assert res.status_code == 201
+        assert json["code"] == 201
+        assert json["status"] == "success"
+        assert json["data"]["name"] == "Product"
+
+        admin = create_user(username="usr4", role="admin")
+        json = login(admin.username, "TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        payload = {"name": "Product 2", "buy_price": "100", "sell_price": "110"}
+        res = client.post("/api/products/", headers=headers, json=payload)
+        json = res.get_json()
+
+        assert res.status_code == 201
+        assert json["code"] == 201
+        assert json["status"] == "success"
+        assert json["data"]["name"] == "Product 2"
+
+    @pytest.mark.case("TC003")
+    def test_create_product_without_required_data(self, client, create_user, login):
+        """
+        Test Case: TC003
+
+        Description: Verify without mandatory data no one is able to create product
+        """
+        admin = create_user(username="usr4", role="admin")
+        json = login(admin.username, "TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        payload = {"name": "Product", "buy_price": "100", "sell_price": ""}
+        res = client.post("/api/products/", headers=headers, json=payload)
+        json = res.get_json()
+
+        assert res.status_code == 400
+        assert json["code"] == 400
+        assert json["status"] == "fail"
+        assert "missing mandatory fields" in json["errors"].lower()
+
+        payload = {"name": "Product", "sell_price": "110"}
+        res = client.post("/api/products/", headers=headers, json=payload)
+        json = res.get_json()
+
+        assert res.status_code == 400
+        assert json["code"] == 400
+        assert json["status"] == "fail"
+        assert "missing mandatory fields" in json["errors"].lower()
+
+        payload = {"buy_price": "100", "sell_price": ""}
+        res = client.post("/api/products/", headers=headers, json=payload)
+        json = res.get_json()
+
+        assert res.status_code == 400
+        assert json["code"] == 400
+        assert json["status"] == "fail"
+        assert "missing mandatory fields" in json["errors"].lower()
+
+    @pytest.mark.case("TC004")
+    def test_create_product_duplicate_name(self, client, create_user, login):
+        """
+        Test Case: TC004
+
+        Description: Verify product name must be unique
+        """
+        admin = create_user(username="usr4", role="admin")
+        json = login(admin.username, "TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        payload = {"name": "Product", "buy_price": "100", "sell_price": "120"}
+        res = client.post("/api/products/", headers=headers, json=payload)
+        json = res.get_json()
+
+        assert res.status_code == 201
+        assert json["code"] == 201
+        assert json["status"] == "success"
+
+        res = client.post("/api/products/", headers=headers, json=payload)
+        json = res.get_json()
+
+        assert res.status_code == 409
+        assert json["code"] == 409
+        assert json["status"] == "fail"
+        assert "product name already exists" in json["errors"].lower()
