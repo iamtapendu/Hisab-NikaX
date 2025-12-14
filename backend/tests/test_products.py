@@ -1217,7 +1217,7 @@ class TestTS004:
         assert "product name already exists" in json["errors"].lower()
 
     @pytest.mark.case("TC005")
-    def test_create_product_invalid_quantity(self, client, create_user, login, create_product):
+    def test_update_product_invalid_data(self, client, create_user, login, create_product):
         """
         Test Case: TC005
 
@@ -1321,11 +1321,11 @@ class TestTS005:
         assert json["status"] == "success"
 
     @pytest.mark.case("TC003")
-    def test_update_product_with_invalid_id(self, client, create_user, login, create_product):
+    def test_delete_product_with_invalid_id(self, client, create_user, login, create_product):
         """
         Test Case: TC003
 
-        Description: Verify users not able to update product with invalid id
+        Description: Verify users not able to delete product with invalid id
         """
         create_product("product")
 
