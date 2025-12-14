@@ -140,7 +140,9 @@ class TestTS002:
         json = res.get_json()
 
         assert res.status_code == 403
-        assert "access denied" in json["error"].lower()
+        assert json["code"] == 403
+        assert json["status"] == "fail"
+        assert "access denied" in json["errors"].lower()
 
     @pytest.mark.case("TC002")
     def test_create_users_missing_data(self, client, create_user, login):
@@ -577,7 +579,9 @@ class TestTS003:
         json = res.get_json()
 
         assert res.status_code == 403
-        assert "access denied" in json["error"].lower()
+        assert json["code"] == 403
+        assert json["status"] == "fail"
+        assert "access denied" in json["errors"].lower()
 
     @pytest.mark.case("TC002")
     def test_users_pagination(self, client, create_user, login):
@@ -631,7 +635,9 @@ class TestTS003:
         json = res.get_json()
 
         assert res.status_code == 401
-        assert "missing authorization" in json["msg"].lower()
+        assert json["code"] == 401
+        assert json["status"] == "fail"
+        assert "missing authorization" in json["errors"].lower()
 
 
 @pytest.mark.USERS
@@ -1125,7 +1131,9 @@ class TestTS006:
         json = res.get_json()
 
         assert res.status_code == 403
-        assert "access denied" in json["error"].lower()
+        assert json["code"] == 403
+        assert json["status"] == "fail"
+        assert "access denied" in json["errors"].lower()
 
         user1 = create_user(username="user_00")
         json = login(user1.username, "TestPass123@")
@@ -1163,8 +1171,10 @@ class TestTS006:
         json = res.get_json()
 
         assert res.status_code == 403
-        assert "access denied" in json["error"].lower()
-
+        assert json["code"] == 403
+        assert json["status"] == "fail"
+        assert "access denied" in json["errors"].lower()
+        
         user = create_user(username="usr2", role="manager")
         json = login(user.username, "TestPass123@")
         headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
@@ -1173,7 +1183,9 @@ class TestTS006:
         json = res.get_json()
 
         assert res.status_code == 403
-        assert "access denied" in json["error"].lower()
+        assert json["code"] == 403
+        assert json["status"] == "fail"
+        assert "access denied" in json["errors"].lower()
 
         user = create_user(username="usr3", role="staff")
         json = login(user.username, "TestPass123@")
@@ -1183,7 +1195,9 @@ class TestTS006:
         json = res.get_json()
 
         assert res.status_code == 403
-        assert "access denied" in json["error"].lower()
+        assert json["code"] == 403
+        assert json["status"] == "fail"
+        assert "access denied" in json["errors"].lower()
 
     @pytest.mark.case("TC003")
     def test_delete_admin_own(self, client, create_user, login):
