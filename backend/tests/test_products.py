@@ -132,7 +132,9 @@ class TestTS002:
         json = res.get_json()
 
         assert res.status_code == 401
-        assert "missing " in json["msg"].lower()
+        assert json["code"] == 401
+        assert json["status"] == "fail"
+        assert "missing " in json["errors"].lower()
 
     @pytest.mark.case("TC002")
     def test_with_different_roles(self, client, create_user, login):
@@ -223,3 +225,176 @@ class TestTS002:
         assert json["pagination"]["per_page"] == 3
         assert json["pagination"]["pages"] == 9
         assert json["pagination"]["total"] == 27
+
+    @pytest.mark.case("TC004")
+    def test_get_products_by_id(self, client, create_user, login, create_product):
+        """
+        Test Case: TC004
+
+        Description: Verify with only manager, admin and staff roles are allowed for
+        product api access when fetching data by id
+        """
+        create_product(name=f"product_1")
+        res = client.get("/api/products/1")
+        json = res.get_json()
+
+        assert res.status_code == 401
+        assert json["code"] == 401
+        assert json["status"] == "fail"
+        assert "missing " in json["errors"].lower()
+
+        guest = create_user(username="usr1", role="guest")
+        json = login(guest.username, "TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        res = client.get("/api/products/1", headers=headers)
+        json = res.get_json()
+
+        assert res.status_code == 403
+        assert json["code"] == 403
+        assert json["status"] == "fail"
+        assert "forbidden" in json["errors"].lower()
+
+        staff = create_user(username="usr2", role="staff")
+        json = login(staff.username, "TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        res = client.get("/api/products/1", headers=headers)
+        json = res.get_json()
+
+        assert res.status_code == 200
+        assert json["code"] == 200
+        assert json["status"] == "success"
+
+        manager = create_user(username="usr3", role="manager")
+        json = login(manager.username, "TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        res = client.get("/api/products/1", headers=headers)
+        json = res.get_json()
+
+        assert res.status_code == 200
+        assert json["code"] == 200
+        assert json["status"] == "success"
+
+        admin = create_user(username="usr4", role="admin")
+        json = login(admin.username, "TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        res = client.get("/api/products/1", headers=headers)
+        json = res.get_json()
+
+        assert res.status_code == 200
+        assert json["code"] == 200
+        assert json["status"] == "success"
+        assert json["data"]["name"] == "product_1"
+
+    @pytest.mark.case("TC005")
+    def test_get_products_by_invalid_id(self, client, create_user, login):
+        """
+        Test Case: TC005
+
+        Description: Verify users not able to fetch data with invalid id
+        """
+
+        admin = create_user(username="usr4", role="admin")
+        json = login(admin.username, "TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        res = client.get("/api/products/99", headers=headers)
+        json = res.get_json()
+
+        assert res.status_code == 404
+        assert json["code"] == 404
+        assert json["status"] == "fail"
+
+    @pytest.mark.case("TC006")
+    def test_get_products_by_search(self, client, create_user, login, create_product):
+        """
+        Test Case: TC006
+
+        Description: Verify with only manager, admin and staff roles are allowed
+        for product api access when searching
+        """
+        create_product(name=f"product_1")
+        res = client.get("/api/products/search?q=pr")
+        json = res.get_json()
+
+        assert res.status_code == 401
+        assert json["code"] == 401
+        assert json["status"] == "fail"
+        assert "missing " in json["errors"].lower()
+
+        guest = create_user(username="usr1", role="guest")
+        json = login(guest.username, "TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        res = client.get("/api/products/search?q=pr", headers=headers)
+        json = res.get_json()
+
+        assert res.status_code == 403
+        assert json["code"] == 403
+        assert json["status"] == "fail"
+        assert "forbidden" in json["errors"].lower()
+
+        staff = create_user(username="usr2", role="staff")
+        json = login(staff.username, "TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        res = client.get("/api/products/search?q=pr", headers=headers)
+        json = res.get_json()
+
+        assert res.status_code == 200
+        assert json["code"] == 200
+        assert json["status"] == "success"
+
+        manager = create_user(username="usr3", role="manager")
+        json = login(manager.username, "TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        res = client.get("/api/products/search?q=pr", headers=headers)
+        json = res.get_json()
+
+        assert res.status_code == 200
+        assert json["code"] == 200
+        assert json["status"] == "success"
+
+        admin = create_user(username="usr4", role="admin")
+        json = login(admin.username, "TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        res = client.get("/api/products/search?q=pr", headers=headers)
+        json = res.get_json()
+
+        assert res.status_code == 200
+        assert json["code"] == 200
+        assert json["status"] == "success"
+        assert json["data"][0]["name"] == "product_1"
+
+    @pytest.mark.case("TC007")
+    def test_searched_products_results(self, client, create_user, login, create_product):
+        """
+        Test Case: TC007
+
+        Description: Verify searching by keyword working perfectly
+        """
+        create_product(name=f"MUD GUARD HERO 22 BLACK")
+        create_product(name=f"MUD GUARD HERO 20 BLACK")
+        create_product(name=f"MUD GUARD HERO 22 RED")
+        create_product(name=f"MUD GUARD HERO 20 RED")
+        create_product(name=f"MUD GUARD VW 22 BLACK")
+        create_product(name=f"MUD GUARD VW 20 BLACK")
+        create_product(name=f"MUD GUARD VW 22 RED")
+        create_product(name=f"MUD GUARD VW 20 RED")
+
+        admin = create_user()
+        json = login(admin.username, "TestPass123@")
+        headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+
+        res = client.get("/api/products/search?q=MUD 20 RED", headers=headers)
+        json = res.get_json()
+
+        assert res.status_code == 200
+        assert json["code"] == 200
+        assert json["status"] == "success"
+        assert len(json["data"]) == 2
