@@ -1,7 +1,7 @@
 import pytest
 from app import create_app
-from extensions import db
-from config import TestConfig
+from backend.dependecies.extensions import db
+from backend.core.config import TestConfig
 
 
 @pytest.fixture(scope="session")

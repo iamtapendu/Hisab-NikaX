@@ -1,5 +1,5 @@
 from flask import request
-from extensions import db, role_required, validate_field, make_response, blacklist,\
+from backend.dependecies.extensions import db, role_required, validate_field, make_response, blacklist,\
     USERNAME_REGX, NAME_REGX, EMAIL_REGX, PHONE_REGX, PASSWORD_REGX, ROLE_REGX, IMAGE_REGX
 from flask_jwt_extended import create_access_token, create_refresh_token,\
     jwt_required, get_jwt_identity, get_jwt, decode_token

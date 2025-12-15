@@ -331,7 +331,7 @@ class TestTS005:
 
         Description: Verify users able to logout successfully with valid data.
         """
-        from extensions import blacklist
+        from backend.dependecies.extensions import blacklist
 
         # Login
         login = client.post(
@@ -365,7 +365,7 @@ class TestTS005:
         Description: Verify logged out users access token and refresh
         token is blacklisted and can not be used again.
         """
-        from extensions import blacklist
+        from backend.dependecies.extensions import blacklist
 
         # Login
         login = client.post(

@@ -1,7 +1,7 @@
 import os
 import pytest
 from sqlalchemy import select
-from extensions import db
+from backend.dependecies.extensions import db
 from flask_jwt_extended import decode_token
 
 # ---------------- FIXTURES ---------------- #

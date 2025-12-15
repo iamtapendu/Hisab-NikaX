@@ -1,5 +1,5 @@
 from flask import abort
-from extensions import db
+from backend.dependecies.extensions import db
 from sqlalchemy import select
 from products.model import Product
 from datetime import datetime, timezone

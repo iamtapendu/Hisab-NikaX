@@ -2,7 +2,7 @@ from flask import request
 from sqlalchemy import select, func, or_
 from .model import Product
 from . import products_bp
-from extensions import (
+from backend.dependecies.extensions import (
     db,
     role_required,
     validate_field,

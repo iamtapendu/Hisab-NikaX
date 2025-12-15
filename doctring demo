@@ -18,3 +18,43 @@ Error Responses:
 Return:
 ------- 
     <if any>
+    
+    
+app/
+├── backend/
+│   ├── main.py
+│   ├── core/
+│   │   ├── config.py
+│   │   ├── security.py
+│   │   └── logging.py
+│   ├── db/
+│   │   ├── base.py
+│   │   ├── session.py
+│   │   └── migrations/
+│   ├── modules/
+│   │   ├── auth/
+│   │   │   ├── router.py
+│   │   │   ├── schema.py
+│   │   │   ├── model.py
+│   │   │   └── service.py
+│   │   ├── users/
+│   │   │   ├── router.py
+│   │   │   ├── schema.py
+│   │   │   ├── model.py
+│   │   │   └── service.py
+│   │   ├── inventory/
+│   │   │   ├── router.py
+│   │   │   ├── schema.py
+│   │   │   ├── model.py
+│   │   │   └── service.py
+│   │   └── sales/
+│   │       ├── router.py
+│   │       ├── schema.py
+│   │       ├── model.py
+│   │       └── service.py
+│   ├── dependencies/
+│   │   ├── auth.py
+│   │   └── permissions.py
+│   └── tests/
+
+

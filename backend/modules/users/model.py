@@ -1,4 +1,4 @@
-from extensions import db, bcrypt
+from backend.dependecies.extensions import db, bcrypt
 from datetime import datetime, timezone
 
 
