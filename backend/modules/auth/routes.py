@@ -33,6 +33,11 @@ async def login(
 
     This endpoint validates the provided username and password and returns
     both an access token and a refresh token upon successful login.
+    
+    :param form_data: login data username and password
+    :type form_data: Annotated[OAuth2PasswordRequestFormStrict, Depends()]
+    :param db: Database Session object
+    :type db: Annotated[Session, Depends(get_db)]
     """
     return auth_service.authenticate_user(
         db=db,
@@ -61,6 +66,11 @@ async def refresh_token(
 
     This endpoint is used when an access token has expired. The client
     sends a valid refresh token to obtain a new access token.
+    
+    :param token: Current refresh token
+    :type token: Annotated[JWTPayload, Depends(get_current_refresh_token)]
+    :param db: Database Session obj
+    :type db: Annotated[Session, Depends(get_db)]
     """
     return auth_service.rotate_refresh_token(db=db, payload=token)
 
@@ -81,5 +91,11 @@ async def logout(
 ):
     """
     Logout user by refresh token.
+    
+    :param token: Current refresh token
+    :type token: Annotated[JWTPayload, Depends(get_current_refresh_token)]
+    :param db: Database Session obj
+    :type db: Annotated[Session, Depends(get_db)]
     """
     auth_service.revoke_token(db=db, payload=token)
+    auth_service.cleanup_expired_tokens(db=db)
