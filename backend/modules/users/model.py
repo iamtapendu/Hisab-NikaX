@@ -1,108 +1,42 @@
-from backend.dependecies.extensions import db, bcrypt
 from datetime import datetime, timezone
 
+from sqlalchemy import String, Integer, DateTime
+from sqlalchemy.orm import Mapped, mapped_column
 
-class User(db.Model):
+from database.base import Base
+
+
+class User(Base):
     """
-    User model representing the application's users.
+    SQLAlchemy model representing application users.
 
-    This model stores information about users including login credentials,
-    contact information, roles, and status.
-
-    Columns
-    -------
-    id : Integer
-        Primary key for the user table.
-    username : String(20)
-        Unique username used for login.
-    name : String(50)
-        Full name of the user.
-    email : String(50)
-        User's email address.
-    phone : String(10)
-        User's phone number.
-    password_hash : String(200)
-        Hashed password for secure authentication.
-    role : String(50)
-        Role of the user for authorization. Default: "guest".
-    image : String(50)
-        Profile image filename or path. Default: empty string.
-    created_at : DateTime
-        Timestamp of when the user was created. Default: current UTC time.
-
-    Methods
-    -------
-    set_password(password)
-        Hashes the provided password and stores it in password_hash.
-    check_password(password)
-        Checks a plaintext password against the stored hash.
-    to_dict()
-        Serializes the user object to a dictionary for JSON responses.
+    This model is strictly responsible for database persistence.
+    Business logic, password hashing, and serialization are handled
+    outside the model (services / schemas).
     """
 
     __tablename__ = "users"
 
-    # Table columns
-    id = db.Column(db.Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
-    username = db.Column(db.String(20), unique=True, nullable=False)
-    name = db.Column(db.String(50), nullable=False)
-    email = db.Column(db.String(50))
-    phone = db.Column(db.String(10))
+    username: Mapped[str] = mapped_column(String(20), unique=True, nullable=False, index=True)
 
-    password_hash = db.Column(db.String(200), nullable=False)
-    role = db.Column(db.String(50), default="guest", nullable=False)
+    name: Mapped[str] = mapped_column(String(50), nullable=False)
 
-    image = db.Column(db.String(50), default="")
+    email: Mapped[str | None] = mapped_column(String(50), nullable=True, index=True)
 
-    # Use utc to ensure timezone-independent creation timestamp
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    phone: Mapped[str | None] = mapped_column(String(10), nullable=True)
 
-    # Password handling
-    def set_password(self, password):
-        """
-        Hashes the plaintext password and stores it in `password_hash`.
+    password_hash: Mapped[str] = mapped_column(String(200), nullable=False)
 
-        Parameters
-        ----------
-        password : str
-            Plaintext password provided by the user.
-        """
-        self.password_hash = bcrypt.generate_password_hash(password).decode()
+    role: Mapped[str] = mapped_column(String(10), nullable=False, default="guest")
 
-    def check_password(self, password):
-        """
-        Verifies if the provided password matches the stored hash.
+    image: Mapped[str] = mapped_column(String(50), nullable=True)
 
-        Parameters
-        ----------
-        password : str
-            Plaintext password to verify.
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc)
+    )
 
-        Returns
-        -------
-        bool
-            True if password matches, False otherwise.
-        """
-        return bcrypt.check_password_hash(self.password_hash, password)
-
-    # Serialization for API responses
-    def to_dict(self):
-        """
-        Converts the User object into a dictionary suitable for JSON responses.
-
-        Returns
-        -------
-        dict
-            Dictionary containing user data (excluding password hash).
-        """
-        return {
-            "id": self.id,
-            "username": self.username,
-            "name": self.name,
-            "email": self.email,
-            "phone": self.phone,
-            "role": self.role,
-            "created_at": self.created_at.isoformat(),
-            "image": self.image,
-        }
+    last_updated: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc)
+    )

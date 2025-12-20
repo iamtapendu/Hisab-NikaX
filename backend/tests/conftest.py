@@ -1,35 +1,96 @@
 import pytest
-from app import create_app
-from backend.dependecies.extensions import db
-from backend.core.config import TestConfig
+from fastapi import Depends, APIRouter
+from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+from app import create_application
+from database.base import Base
+from dependencies.db import get_db
+from dependencies.auth import get_current_refresh_token
+from core.security import create_access_token, create_refresh_token, hash_password
+from modules.users.model import User
 
 
-@pytest.fixture(scope="session")
-def app():
-    """Create and configure a new app instance for tests."""
-    app = create_app(TestConfig)
-    return app
+SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
 
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL,
+    connect_args={"check_same_thread": False},
+)
 
-@pytest.fixture(scope="session")
-def db_session(app):
-    """Create database tables once per test session."""
-    with app.app_context():
-        db.create_all()
-        yield db
-        db.drop_all()
+TestingSessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine,
+)
 
 
 @pytest.fixture(scope="function")
-def client(app, db_session):
-    """Provide a new test client for each test function."""
-    with app.test_client() as client:
+def db_session():
+    Base.metadata.create_all(bind=engine)
+    session = TestingSessionLocal()
+
+    try:
+        yield session
+    finally:
+        session.close()
+        Base.metadata.drop_all(bind=engine)
+
+
+@pytest.fixture(scope="function")
+def client(db_session):
+    app = create_application()
+
+    def override_get_db():
+        try:
+            yield db_session
+        finally:
+            pass
+
+    app.dependency_overrides[get_db] = override_get_db
+
+    router = APIRouter()
+
+    @router.post("/_test/refresh-dep")
+    async def _test_refresh_dep(token=Depends(get_current_refresh_token)):
+        return token
+
+    app.include_router(router)
+
+    with TestClient(app) as client:
         yield client
-        # Clean DB between tests
-        db_session.session.remove()
-        for table in reversed(db.metadata.sorted_tables):
-            db_session.session.execute(table.delete())
-        db_session.session.commit()
+
+
+@pytest.fixture
+def test_user(db_session):
+    user = User(
+        username="admin",
+        name="admin",
+        email="testuser@example.com",
+        password_hash=hash_password("Password@123"),
+        role="admin",
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+    return user
+
+
+@pytest.fixture
+def access_token(test_user):
+    return create_access_token(
+        subject=str(test_user.id),
+        role=test_user.role,
+    )
+
+
+@pytest.fixture
+def refresh_token(test_user):
+    return create_refresh_token(
+        subject=str(test_user.id),
+        role=test_user.role,
+    )
 
 
 def pytest_itemcollected(item):

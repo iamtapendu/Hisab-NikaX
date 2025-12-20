@@ -27,7 +27,6 @@ def configure_logging() -> None:
     logging_config = {
         "version": 1,
         "disable_existing_loggers": False,
-
         # Formatters
         "formatters": {
             "standard": {
@@ -38,12 +37,10 @@ def configure_logging() -> None:
             },
             "access": {
                 "format": (
-                    "%(asctime)s | ACCESS | %(client_addr)s | "
-                    "%(request_line)s | %(status_code)s"
+                    "%(asctime)s | ACCESS | %(client_addr)s | " "%(request_line)s | %(status_code)s"
                 )
             },
         },
-
         # Handlers
         "handlers": {
             "console": {
@@ -70,7 +67,6 @@ def configure_logging() -> None:
                 "level": "ERROR",
             },
         },
-
         # Loggers
         "loggers": {
             # Application logger
@@ -79,14 +75,12 @@ def configure_logging() -> None:
                 "level": LOG_LEVEL,
                 "propagate": False,
             },
-
             # SQLAlchemy logging
             "sqlalchemy.engine": {
                 "handlers": ["console", "app_file"],
                 "level": "WARNING",
                 "propagate": False,
             },
-
             # Uvicorn loggers
             "uvicorn": {
                 "handlers": ["console", "app_file"],
@@ -104,7 +98,6 @@ def configure_logging() -> None:
                 "propagate": False,
             },
         },
-
         # Root Logger
         "root": {
             "handlers": ["console", "app_file"],
