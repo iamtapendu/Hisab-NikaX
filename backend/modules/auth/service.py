@@ -17,12 +17,6 @@ from .model import RevokedToken
 def revoke_token(db: Session, payload: JWTPayload) -> None:
     """
     Revoke JWT token using JTI
-
-    :param db: Session object
-    :type db: Session
-    :param payload: JWT token
-    :type payload: JWTPayload
-
     """
     db.add(
         RevokedToken(
@@ -33,18 +27,11 @@ def revoke_token(db: Session, payload: JWTPayload) -> None:
     db.commit()
 
 
-def rotate_refresh_token(db: Session, payload: JWTPayload) -> dict:
+def rotate_refresh_token(db: Session, payload: JWTPayload) -> dict[str, str]:
     """
     Rotate refresh token -
     - Revoke old refresh token
     - Issue new access + refresh tokens
-
-    :param db: Session object
-    :type db: Session
-    :param payload: JWT token payload
-    :type payload: JWTPayload
-    :return: New access and refresh token
-    :rtype: dict[Any, Any]
     """
     if payload["type"] != TokenType.refresh:
         raise HTTPException(
@@ -76,30 +63,18 @@ def rotate_refresh_token(db: Session, payload: JWTPayload) -> dict:
 def cleanup_expired_tokens(db: Session) -> None:
     """
     Cleaned up old expired tokens.
-
-    :param db: Session object
-    :type db: Session
     """
     stmt = delete(RevokedToken).where(RevokedToken.expires_at < datetime.now(timezone.utc))
     db.execute(stmt)
     db.commit()
 
 
-def authenticate_user(db: Session, username: str, password: str) -> dict:
+def authenticate_user(db: Session, username: str, password: str) -> dict[str, str]:
     """
     Authenticate user and generate JWT tokens.
 
     This validates the provided username and password and returns
     both an access token and a refresh token upon successful login.
-
-    :param db: Session Object
-    :type db: Session
-    :param username: Authentication username
-    :type username: str
-    :param password: Authentication password
-    :type password: str
-    :return: JWT Tokens
-    :rtype: dict[Any, Any]
     """
 
     user = db.execute(select(User).where(User.username == username)).scalar_one_or_none()

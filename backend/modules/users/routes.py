@@ -1,15 +1,61 @@
-from fastapi import APIRouter, Depends
+from typing import Annotated
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, status
 from sqlalchemy.orm import Session
 
+from core.common import ErrorResponse, PaginatedResponse
+from dependencies.auth import get_current_user, require_roles
 from dependencies.db import get_db
-from modules.users import service, schema
+from modules.users import service as user_service
+from .model import User
+from .schema import UserCreate, UserPasswordUpdate, UserRead, UserUpdate
+
 
 router = APIRouter(tags=["Users"])
 
 
-@router.get("/")
-# @role_required("admin")
-def get_users():
+@router.get(
+    "/profile",
+    status_code=status.HTTP_200_OK,
+    response_model=UserRead,
+    summary="Retrieve current user profile",
+    responses={
+        404: {"model": ErrorResponse, "description": "User not found"},
+        422: {"model": ErrorResponse, "description": "Not able to process"},
+        500: {"model": ErrorResponse, "description": "Internal server error"},
+    },
+)
+def get_profile(current_user: Annotated[User, Depends(get_current_user)]):
+    """
+    Retrieve current user profile
+
+    Fetches a specific user from the database using their unique primary key.
+    Typically used for viewing user profiles, pre-filling edit forms, or
+    administrative inspection of a particular user record.
+
+    Access Control
+    --------------
+    - **Anyone**: Can fetch records of their profile
+    """
+    return current_user
+
+
+@router.get(
+    "/",
+    status_code=status.HTTP_200_OK,
+    response_model=PaginatedResponse[UserRead],
+    dependencies=[Depends(require_roles("admin"))],
+    summary="Retrieve a paginated list of all users.",
+    responses={
+        403: {"model": ErrorResponse, "description": "Don't have enough permission"},
+        422: {"model": ErrorResponse, "description": "Not able to process"},
+        500: {"model": ErrorResponse, "description": "Internal server error"},
+    },
+)
+def get_users(
+    db: Annotated[Session, Depends(get_db)],
+    page: Annotated[int, Query(ge=1)] = 1,
+    per_page: Annotated[int, Query(ge=1, le=100)] = 50,
+):
     """
     Retrieve a paginated list of all users.
 
@@ -17,503 +63,237 @@ def get_users():
     efficiently load users in pages (e.g., 50 per request) instead of fetching
     all records at once.
 
-    Access:
-    -------
-        Admin only
-
-    URL Params:
-    -----------
-        page : int (optional)
-            The page number to retrieve. Default is 1.
-        per_page : int (optional)
-            Number of user records per page. Default is 50.
-
-    JSON Payload:
-    -------------
-        None
-
-    Error Responses:
-    ----------------
-        None
-
-    Return:
-    -------
-        JSON Response
+    Access Control
+    --------------
+    - **Admin**: Can fetch records of all users
     """
-    # # Pagination metadata
-    # page = request.args.get("page", 1, type=int)
-    # per_page = request.args.get("per_page", 50, type=int)
-
-    # # Paginate user
-    # stmt = select(User).order_by(User.id).offset((page - 1) * per_page).limit(per_page)
-    # users = db.session.execute(stmt).scalars().all()
-
-    # total = db.session.execute(select(func.count()).select_from(User)).scalar()
-    # pages = (total + per_page - 1) // per_page if total else 0
-
-    # pg_dict = {"page": page, "per_page": per_page, "total": total, "pages": pages}
-
-    # return make_response(
-    #     data=[u.to_dict() for u in users],
-    #     message="Successfully retrive data.",
-    #     pagination=pg_dict,
-    # )
-    return {"msg":"Hello world!!"}
-
-
-# @router.get("/<int:user_id>")
-# @jwt_required()
-# def get_user(user_id: int):
-#     """
-#     Retrieve a single user by ID.
-
-#     Fetches a specific user from the database using their unique primary key.
-#     Typically used for viewing user profiles, pre-filling edit forms, or
-#     administrative inspection of a particular user record.
-
-#     Access:
-#     -------
-#         Any one with valid credentials
-
-#     URL Params:
-#     -----------
-#         user_id (int)
-#             The unique ID of the user to retrieve.
-
-#     JSON Payload:
-#     --------------
-#         None
-
-#     Error Responses:
-#     ----------------
-#         404 Not Found
-#             Returned if no user exists with the given ID.
-#         403 Forbidden
-#             Returned if the requesting user does not have admin access.
-
-#     Return:
-#     -------
-#         200 OK
-#             A JSON object representing the serialized user record.
-#     """
-#     user_jwt = get_jwt_identity()
-#     if user_jwt["user_id"] != user_id and user_jwt["role"] != "admin":
-#         return make_response(
-#             message="Not able to fetch data.",
-#             errors="requesting user does not have admin access",
-#             status="fail",
-#             code=403,
-#         )
-
-#     user = db.session.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
-#     if user is None:
-#         return make_response(
-#             message="Not able to fetch data.",
-#             errors="User not found",
-#             status="fail",
-#             code=404,
-#         )
-#     return make_response(data=user.to_dict(), message="Successfully retrive data.")
-
-
-# @router.get("/username/<username>")
-# @jwt_required()
-# def get_user_by_username(username: str):
-#     """
-#     Retrieve a single user by useranme.
-
-#     Fetches a specific user from the database using their unique username.
-#     Typically used for viewing user profiles, pre-filling edit forms, or
-#     administrative inspection of a particular user record.
-
-#     Access:
-#     -------
-#         Anyone with valid credentials
-
-#     URL Params:
-#     -----------
-#         username (str)
-#             The unique ID of the user to retrieve.
-
-#     JSON Payload:
-#     --------------
-#         None
-
-#     Error Responses:
-#     ----------------
-#         404 Not Found
-#             Returned if no user exists with the given username.
-#         403 Forbidden
-#             Returned if the requesting user does not have admin access.
-
-#     Return:
-#     -------
-#         200 OK
-#             A JSON object representing the serialized user record.
-#     """
-#     requestor = db.session.execute(
-#         select(User).where(User.id == get_jwt_identity()["user_id"])
-#     ).scalar_one()
-
-#     if requestor.username != username and requestor.role != "admin":
-#         return make_response(
-#             message="Not able to fetch data.",
-#             errors="Requesting user does not have admin access",
-#             status="fail",
-#             code=403,
-#         )
-#     elif requestor.username == username:
-#         make_response(data=requestor.to_dict(), message="Successfully retrive data.")
-
-#     # Get user or return 404
-#     user = db.session.execute(select(User).where(User.username == username)).scalar_one_or_none()
-#     if user is None:
-#         return make_response(
-#             message="Not able to fetch data.",
-#             errors="User not found",
-#             status="fail",
-#             code=404,
-#         )
-
-#     return make_response(data=user.to_dict(), message="Successfully retrive data.")
-
-
-# @router.post("/")
-# @role_required("admin")
-# def create_user():
-#     """
-#     Create a new user in the system.
-
-#     This endpoint allows administrators to create new users. Only fields that are
-#     provided and pass regex validation will be assigned; all other fields fall back
-#     to SQLAlchemy model defaults. Duplicate username checks are performed before
-#     user creation. Password is always required and stored in a securely hashed form.
-
-#     Access:
-#     -------
-#         Admin only.
-
-#     JSON Payload:
-#     ------------
-#         {
-#             "username": "string (required)",
-#             "password": "string (required)",
-#             "name": "string (required)",
-#             "email": "string (optional)",
-#             "phone": "string or number (optional)",
-#             "role": "string (optional)",
-#             "image": "string (optional)"
-#         }
-
-#     Error Responses:
-#     ----------------
-#         - 201 Created: User successfully created.
-#         - 400 Bad Request: Validation error or missing required fields.
-#         - 409 Conflict: Username already exists.
-
-#     Return:
-#     -------
-#         JSON response containing the created user's data.
-
-#     """
-#     data = request.get_json()
-
-#     # Validate required fields
-#     if not data.get("username") or not data.get("password") or not data.get("name"):
-#         return make_response(
-#             message="Not able to create user.",
-#             errors="Missing mandatory fields",
-#             status="fail",
-#             code=400,
-#         )
-
-#     # Check username uniqueness
-#     if db.session.execute(select(User).where(User.username == data.get("username"))).scalar():
-#         return make_response(
-#             message="Not able to create user.",
-#             errors="Username already exists.",
-#             status="fail",
-#             code=409,
-#         )
-
-#     try:
-#         # Create new user object
-#         new_user = User()
-
-#         # Setting values only those are matching with regex pattern
-#         for field, pattern in fields.items():
-#             value = validate_field(data.get(field), pattern, field)
-#             if value is not None:
-#                 setattr(new_user, field, value)
-
-#     except ValueError as e:
-#         # Regex validation error
-#         return make_response(
-#             message="Not able to create user.", errors=str(e), status="fail", code=400
-#         )
-
-#     # Hash and set password
-#     new_user.set_password(data["password"])
-
-#     # Save to database
-#     db.session.add(new_user)
-#     db.session.commit()
-
-#     return make_response(data=new_user.to_dict(), message="Successfuly created new user.", code=201)
-
-
-# @router.put("/<int:user_id>")
-# @jwt_required()
-# def update_user(user_id):
-#     """
-#     Update an existing user's information.
-
-#     This endpoint allows users and administrators to update specific user fields such as
-#     username, email, name, phone, role, image, and password. Only the fields
-#     included in the incoming JSON payload will be updated. Each field is
-#     validated against its corresponding regex pattern before being saved.
-
-#     Access:
-#     -------
-#         Anyone with valid credentials
-
-#     URL Params:
-#     -----------
-#         user_id (int): Unique ID of the user to update.
-
-#     JSON Payload:
-#     -------------
-#         {
-#             "username": "new_username",
-#             "email": "newmail@example.com",
-#             "name": "New Name",
-#             "phone": "9876543210",
-#             "role": "manager",
-#             "password": "NewPass123@"
-#         }
-
-#     Error Responses:
-#     ----------------
-#         - 400: Invalid field format (regex failure)
-#         - 403: Forbidden Returned if the requesting user does not have access.
-#         - 404: User ID not found
-#         - 409: Username/email already exists
-
-#     Return:
-#     -------
-#         json reponse containing updated users data.
-
-#     """
-
-#     user_jwt = get_jwt_identity()
-#     if user_jwt["user_id"] != user_id and user_jwt["role"] != "admin":
-#         return make_response(
-#             message="Not able to update data.",
-#             errors="User does not have admin access",
-#             status="fail",
-#             code=403,
-#         )
-
-#     user = db.session.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
-#     if user is None:
-#         return make_response(
-#             message="Not able to fetch data.",
-#             errors="User not found",
-#             status="fail",
-#             code=404,
-#         )
-#     data = request.get_json()
-
-#     try:
-#         # validation for username
-#         if validate_field(data.get("username"), USERNAME_REGX, "username"):
-#             if user.username != data.get(
-#                 "username"
-#             ):  # checking whether new and old username same or not
-#                 if db.session.execute(
-#                     select(User).where(User.username == data.get("username"))
-#                 ).scalar():
-#                     return make_response(
-#                         message="Not able to update user.",
-#                         errors="Username already exists.",
-#                         status="fail",
-#                         code=409,
-#                     )
-
-#         # Setting values only those are matching with regex pattern
-#         for field, pattern in fields.items():
-#             value = validate_field(data.get(field), pattern, field)
-#             if field == "password":
-#                 continue
-#             elif field == "role" and user_jwt["role"] != "admin":
-#                 continue
-#             elif value is not None:
-#                 setattr(user, field, value)
-
-#     except ValueError as e:
-#         # Regex validation error
-#         return make_response(
-#             message="Not able to update user.", errors=str(e), status="fail", code=400
-#         )
-
-#     # Commit changes
-#     db.session.commit()
-
-#     return make_response(data=user.to_dict(), message="Successfuly updated user.", code=200)
-
-
-# @router.put("/<int:user_id>/password")
-# @jwt_required()
-# def update_password(user_id):
-#     """
-#     This endpoint allows administrators to update password.
-
-#     Access:
-#     -------
-#         Anyone with valid credentials.
-
-#     URL Params:
-#     -----------
-#         user_id: int
-
-#     JSON Payload:
-#     -------------
-#         {
-#             "old_password": "OldPass123@",
-#             "new_password": "NewPass123@"
-#         }
-
-#     Error Responses:
-#     ----------------
-#         - 400: Invalid field format (regex failure)
-#         - 403: Forbidden Returned if the requesting user does not have access.
-#         - 404: User ID not found
-
-#     Return:
-#     -------
-#         200 OK
-#             JSON reponse containing successfull response.
-#     """
-#     user_jwt = get_jwt_identity()
-#     data = request.get_json()
-
-#     # Mandatory data
-#     if not data.get("old_password") or not data.get("new_password"):
-#         return make_response(
-#             message="Not able to change password.",
-#             errors="Old and new password are required",
-#             status="fail",
-#             code=400,
-#         )
-#     # Checking only admin or self password can be changed
-#     if user_id != user_jwt["user_id"] and user_jwt["role"] != "admin":
-#         return make_response(
-#             message="Not able to change password.",
-#             errors="User does not have admin access",
-#             status="fail",
-#             code=403,
-#         )
-
-#     user = db.session.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
-#     if user is None:
-#         return make_response(
-#             message="Not able to fetch data.",
-#             errors="User not found",
-#             status="fail",
-#             code=404,
-#         )
-
-#     # Check for old password correctness
-#     if not user.check_password(data.get("old_password")):
-#         return make_response(
-#             message="Not able to change password.",
-#             errors="Incorrect old password.",
-#             status="fail",
-#             code=400,
-#         )
-
-#     # Check same password reuse
-#     if data.get("old_password") == data.get("new_password"):
-#         return make_response(
-#             message="Not able to change password.",
-#             errors="New password and old are same",
-#             status="fail",
-#             code=409,
-#         )
-
-#     try:
-#         # validation for username
-#         if validate_field(data.get("new_password"), PASSWORD_REGX, "password"):
-#             user.set_password(data.get("new_password"))
-
-#     except ValueError as e:
-#         # Regex validation error
-#         return make_response(
-#             message="Not able to change password.",
-#             errors=str(e),
-#             status="fail",
-#             code=400,
-#         )
-
-#     # Commit changes
-#     db.session.commit()
-
-#     return make_response(message="Successfuly chnaged user password.", code=200)
-
-
-# @router.delete("/<int:user_id>")
-# @role_required("admin")
-# def delete_user(user_id):
-#     """
-#     Delete a user by ID.
-
-#     This endpoint permanently removes a user record from the database based on
-#     the provided user ID.
-
-#     Access:
-#     -------
-#         Admin only
-
-#     URL Params:
-#     -----------
-#         user_id (int)
-#             The unique ID of the user to delete.
-
-#     JSON Payload:
-#     --------------
-#         None
-
-#     Error Responses:
-#     -----------------
-#         - 404 Not Found
-#             Returned if the user with the given ID does not exist.
-#         - 403 Forbidden
-#             Returned if the requesting user does not have access.
-
-
-#     Return:
-#     -------
-#         200 OK
-#             JSON object containing a success message.
-#     """
-#     jwt = get_jwt_identity()
-#     if jwt["user_id"] == user_id:
-#         return make_response(
-#             message="Not able to delete user.",
-#             errors="Can not delete admin self account.",
-#             status="fail",
-#             code=400,
-#         )
-
-#     user = db.session.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
-#     if user is None:
-#         return make_response(
-#             message="Not able to fetch data.",
-#             errors="User not found",
-#             status="fail",
-#             code=404,
-#         )
-#     db.session.delete(user)
-#     db.session.commit()
-
-#     return make_response(message="Successfuly deleted user.", code=200)
+    data, meta = user_service.get_users(db, page, per_page)
+    return {
+        "data": data,
+        "meta": meta,
+    }
+
+
+@router.get(
+    "/{user_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=UserRead,
+    dependencies=[Depends(require_roles("admin"))],
+    summary="Retrieve a single user by ID.",
+    responses={
+        403: {"model": ErrorResponse, "description": "Don't have enough permission"},
+        404: {"model": ErrorResponse, "description": "User not found"},
+        422: {"model": ErrorResponse, "description": "Not able to process"},
+        500: {"model": ErrorResponse, "description": "Internal server error"},
+    },
+)
+def get_user(
+    db: Annotated[Session, Depends(get_db)],
+    user_id: Annotated[int, Path(description="User id", ge=1)],
+):
+    """
+    Retrieve a single user by ID.
+
+    Fetches a specific user from the database using their unique primary key.
+    Typically used for viewing user profiles, pre-filling edit forms, or
+    administrative inspection of a particular user record.
+
+    Access Control
+    --------------
+    - **Admin**: Can fetch records of any user by user id
+    """
+    return user_service.get_user(db, user_id)
+
+
+@router.get(
+    "/username/{username}",
+    status_code=status.HTTP_200_OK,
+    response_model=UserRead,
+    dependencies=[Depends(require_roles("admin"))],
+    summary="Retrieve a single user by username.",
+    responses={
+        403: {"model": ErrorResponse, "description": "Don't have enough permission"},
+        404: {"model": ErrorResponse, "description": "User not found"},
+        422: {"model": ErrorResponse, "description": "Not able to process"},
+        500: {"model": ErrorResponse, "description": "Internal server error"},
+    },
+)
+def get_user_by_username(
+    db: Annotated[Session, Depends(get_db)],
+    username: Annotated[str, Path(description="user username", min_length=3, max_length=20)],
+):
+    """
+    Retrieve a single user by useranme.
+
+    Fetches a specific user from the database using their unique username.
+    Typically used for viewing user profiles, pre-filling edit forms, or
+    administrative inspection of a particular user record.
+
+    Access Control
+    --------------
+    - **Admin**: Can fetch records of any user by username
+    """
+    return user_service.get_user_by_username(db, username)
+
+
+@router.post(
+    "/",
+    status_code=status.HTTP_201_CREATED,
+    response_model=UserRead,
+    dependencies=[Depends(require_roles("admin"))],
+    summary="Create new user",
+    responses={
+        403: {"model": ErrorResponse, "description": "Don't have enough permission"},
+        409: {"model": ErrorResponse, "description": "Username already exists"},
+        422: {"model": ErrorResponse, "description": "Not able to process"},
+        500: {"model": ErrorResponse, "description": "Internal server error"},
+    },
+)
+def create_user(
+    db: Annotated[Session, Depends(get_db)],
+    payload: Annotated[UserCreate, Body(description="new user data")],
+):
+    """
+    Create a new user in the system.
+
+    This endpoint allows administrators to create new users. Only fields that are
+    provided and pass regex validation will be assigned; all other fields fall back
+    to SQLAlchemy model defaults. Duplicate username checks are performed before
+    user creation. Password is always required and stored in a securely hashed form.
+
+    Access Control
+    --------------
+    - **Admin**: Can create user's profile
+    """
+    return user_service.create_user(db, payload)
+
+
+@router.put(
+    "/{user_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=UserRead,
+    summary="Update an existing user's information",
+    responses={
+        403: {"model": ErrorResponse, "description": "Don't have enough permission"},
+        409: {"model": ErrorResponse, "description": "Username already exists"},
+        422: {"model": ErrorResponse, "description": "Not able to process"},
+        500: {"model": ErrorResponse, "description": "Internal server error"},
+    },
+)
+def update_user(
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+    user_id: Annotated[int, Path(description="User id", ge=1)],
+    payload: Annotated[UserUpdate, Body(description="Updated values")],
+):
+    """
+    Update an existing user's information.
+
+    This endpoint allows users and administrators to update specific user fields such as
+    username, email, name, phone, role, image. Only the fields
+    included in the incoming JSON payload will be updated. Each field is
+    validated against its corresponding regex pattern before being saved.
+
+    Access Control
+    --------------
+    - **Admin**: Can update any user's profile (including role)
+    - **Others**: Can update only their own profile (role changes not allowed)
+    """
+    # Check for admin user
+    if current_user.role == "admin":
+        is_admin = True
+    else:
+        if current_user.id != user_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={
+                    "msg": "Not able to update this user data",
+                    "errors": "Admin privileges required",
+                },
+            )
+        is_admin = False
+
+    return user_service.update_user(db, user_id, payload, is_admin)
+
+
+@router.patch(
+    "/{user_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=UserRead,
+    summary="Update an existing user's password",
+    responses={
+        403: {"model": ErrorResponse, "description": "Don't have enough permission"},
+        409: {"model": ErrorResponse, "description": "Same Password"},
+        422: {"model": ErrorResponse, "description": "Not able to process"},
+        500: {"model": ErrorResponse, "description": "Internal server error"},
+    },
+)
+def update_password(
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+    user_id: Annotated[int, Path(description="User id", ge=1)],
+    payload: Annotated[UserPasswordUpdate, Body(description="old and new password")],
+):
+    """
+    This endpoint allows users to update password.
+
+    This endpoint allows users and administrators to update specific user password.
+    Each field is validated against its corresponding regex pattern before being saved.
+
+    Access Control
+    --------------
+    - **Admin**: Can update any user's password even without current password
+    - **Others**: Can update only their own password
+    """
+    # Check for admin user
+    if current_user.role != "admin":
+        if current_user.id != user_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={
+                    "msg": "Not able to update this user password",
+                    "errors": "Admin privileges required",
+                },
+            )
+
+    is_admin = current_user.role == "admin"
+
+    return user_service.update_password(db, user_id, payload, is_admin)
+
+
+@router.delete(
+    "/{user_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_roles("admin"))],
+    summary="Delete a user by user id",
+    responses={
+        403: {"model": ErrorResponse, "description": "Don't have enough permission"},
+        422: {"model": ErrorResponse, "description": "Not able to process"},
+        500: {"model": ErrorResponse, "description": "Internal server error"},
+    },
+)
+def delete_user(
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+    user_id: Annotated[int, Path(description="User id", ge=1)],
+):
+    """
+    Delete a user by ID.
+
+    This endpoint permanently removes a user record from the database based on
+    the provided user ID.
+
+    Access Control
+    --------------
+    - **Admin**: Can delete any user's profile (excluding own profile)
+    """
+    if current_user.id == user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "msg": "Not able to delete user",
+                "errors": "Admin cannot delete own account",
+            },
+        )
+
+    user_service.delete_user(db, user_id)

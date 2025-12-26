@@ -1,6 +1,26 @@
 import pytest
 import os
 
+from core.security import hash_password
+from modules.users.model import User
+
+# ---------------- FIXTURES ---------------- #
+
+@pytest.fixture
+def test_user(db_session):
+    
+    user = User(
+        username="admin",
+        name="admin",
+        email="testuser@example.com",
+        password_hash=hash_password("Password@123"),
+        role="admin",
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+    return user
+
 # ---------------- TEST SUITES ---------------- #
 
 

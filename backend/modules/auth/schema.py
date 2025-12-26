@@ -1,5 +1,4 @@
-from pydantic import BaseModel, EmailStr
-
+from pydantic import BaseModel
 
 # Token Response
 class TokenResponse(BaseModel):

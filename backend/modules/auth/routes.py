@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 from typing import Annotated
+
 from core.security import JWTPayload, OAuth2PasswordRequestFormStrict
 from .schema import TokenResponse
-from core.errors import ErrorResponse
-
+from core.common import ErrorResponse
 from dependencies.auth import get_current_refresh_token
 from dependencies.db import get_db
 from modules.auth import service as auth_service
@@ -24,20 +24,15 @@ router = APIRouter(tags=["Auth"])
         500: {"model": ErrorResponse, "description": "Internal server error"},
     },
 )
-async def login(
-    form_data: Annotated[OAuth2PasswordRequestFormStrict, Depends()],
+def login(
     db: Annotated[Session, Depends(get_db)],
+    form_data: Annotated[OAuth2PasswordRequestFormStrict, Depends()],
 ):
     """
     Authenticate user and generate JWT tokens.
 
     This endpoint validates the provided username and password and returns
     both an access token and a refresh token upon successful login.
-    
-    :param form_data: login data username and password
-    :type form_data: Annotated[OAuth2PasswordRequestFormStrict, Depends()]
-    :param db: Database Session object
-    :type db: Annotated[Session, Depends(get_db)]
     """
     return auth_service.authenticate_user(
         db=db,
@@ -57,20 +52,15 @@ async def login(
         500: {"model": ErrorResponse, "description": "Internal server error"},
     },
 )
-async def refresh_token(
-    token: Annotated[JWTPayload, Depends(get_current_refresh_token)],
+def refresh_token(
     db: Annotated[Session, Depends(get_db)],
+    token: Annotated[JWTPayload, Depends(get_current_refresh_token)],
 ):
     """
     Generate a new access token using the refresh token.
 
     This endpoint is used when an access token has expired. The client
     sends a valid refresh token to obtain a new access token.
-    
-    :param token: Current refresh token
-    :type token: Annotated[JWTPayload, Depends(get_current_refresh_token)]
-    :param db: Database Session obj
-    :type db: Annotated[Session, Depends(get_db)]
     """
     return auth_service.rotate_refresh_token(db=db, payload=token)
 
@@ -85,17 +75,12 @@ async def refresh_token(
         500: {"model": ErrorResponse, "description": "Internal server error"},
     },
 )
-async def logout(
-    token: Annotated[JWTPayload, Depends(get_current_refresh_token)],
+def logout(
     db: Annotated[Session, Depends(get_db)],
+    token: Annotated[JWTPayload, Depends(get_current_refresh_token)],
 ):
     """
     Logout user by refresh token.
-    
-    :param token: Current refresh token
-    :type token: Annotated[JWTPayload, Depends(get_current_refresh_token)]
-    :param db: Database Session obj
-    :type db: Annotated[Session, Depends(get_db)]
     """
     auth_service.revoke_token(db=db, payload=token)
     auth_service.cleanup_expired_tokens(db=db)

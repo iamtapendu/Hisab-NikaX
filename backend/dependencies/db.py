@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from database.session import SessionLocal
 
 
-async def get_db():
+def get_db():
     """
     FastAPI dependency that provides a SQLAlchemy session.
 

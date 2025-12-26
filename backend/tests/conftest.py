@@ -8,8 +8,7 @@ from app import create_application
 from database.base import Base
 from dependencies.db import get_db
 from dependencies.auth import get_current_refresh_token
-from core.security import create_access_token, create_refresh_token, hash_password
-from modules.users.model import User
+from core.security import create_access_token, create_refresh_token
 
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
@@ -60,21 +59,6 @@ def client(db_session):
 
     with TestClient(app) as client:
         yield client
-
-
-@pytest.fixture
-def test_user(db_session):
-    user = User(
-        username="admin",
-        name="admin",
-        email="testuser@example.com",
-        password_hash=hash_password("Password@123"),
-        role="admin",
-    )
-    db_session.add(user)
-    db_session.commit()
-    db_session.refresh(user)
-    return user
 
 
 @pytest.fixture

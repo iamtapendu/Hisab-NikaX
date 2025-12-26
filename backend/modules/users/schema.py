@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, EmailStr, Field
 
@@ -20,7 +19,7 @@ class UserBase(BaseModel):
         ...,
         min_length=1,
         max_length=50,
-        pattern=r"^[A-Za-z][A-Za-z ]{1,49}$",
+        pattern=r"^[A-Za-z][A-Za-z0-9 ]{3,49}$",
     )
     email: EmailStr | None = None
     phone: str | None = Field(
@@ -36,7 +35,7 @@ class UserBase(BaseModel):
     )
     image: str | None = Field(
         default=None,
-        pattern=r"^[A-Za-z0-9_\-]+\.(jpg|jpeg|png)$",
+        pattern=r"^[A-Za-z0-9_/\-]+\.(jpg|jpeg|png)$",
     )
 
 
@@ -71,7 +70,7 @@ class UserUpdate(BaseModel):
         default=None,
         min_length=1,
         max_length=50,
-        pattern=r"^[A-Za-z][A-Za-z ]{1,49}$",
+        pattern=r"^[A-Za-z][A-Za-z0-9 ]{1,49}$",
     )
     email: EmailStr | None = None
     phone: str | None = Field(
@@ -87,7 +86,7 @@ class UserUpdate(BaseModel):
     )
     image: str | None = Field(
         default=None,
-        pattern=r"^[A-Za-z0-9_\-]+\.(jpg|jpeg|png)$",
+        pattern=r"^[A-Za-z0-9_/\-]+\.(jpg|jpeg|png)$",
     )
 
 

@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 
 from core.config import settings
 from core.logging import configure_logging
-from core.errors import register_exception_handlers
+from core.common import register_exception_handlers
 
 from database.base import Base
 from database.session import engine
