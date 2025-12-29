@@ -3,7 +3,7 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, status
 from sqlalchemy.orm import Session
 
 from core.common import ErrorResponse, PaginatedResponse
-from dependencies.auth import get_current_user, require_roles
+from dependencies.auth import get_current_user, required_roles
 from dependencies.db import get_db
 from modules.users import service as user_service
 from .model import User
@@ -43,7 +43,7 @@ def get_profile(current_user: Annotated[User, Depends(get_current_user)]):
     "/",
     status_code=status.HTTP_200_OK,
     response_model=PaginatedResponse[UserRead],
-    dependencies=[Depends(require_roles("admin"))],
+    dependencies=[Depends(required_roles("admin"))],
     summary="Retrieve a paginated list of all users.",
     responses={
         403: {"model": ErrorResponse, "description": "Don't have enough permission"},
@@ -78,7 +78,7 @@ def get_users(
     "/{user_id}",
     status_code=status.HTTP_200_OK,
     response_model=UserRead,
-    dependencies=[Depends(require_roles("admin"))],
+    dependencies=[Depends(required_roles("admin"))],
     summary="Retrieve a single user by ID.",
     responses={
         403: {"model": ErrorResponse, "description": "Don't have enough permission"},
@@ -109,7 +109,7 @@ def get_user(
     "/username/{username}",
     status_code=status.HTTP_200_OK,
     response_model=UserRead,
-    dependencies=[Depends(require_roles("admin"))],
+    dependencies=[Depends(required_roles("admin"))],
     summary="Retrieve a single user by username.",
     responses={
         403: {"model": ErrorResponse, "description": "Don't have enough permission"},
@@ -140,7 +140,7 @@ def get_user_by_username(
     "/",
     status_code=status.HTTP_201_CREATED,
     response_model=UserRead,
-    dependencies=[Depends(require_roles("admin"))],
+    dependencies=[Depends(required_roles("admin"))],
     summary="Create new user",
     responses={
         403: {"model": ErrorResponse, "description": "Don't have enough permission"},
@@ -264,7 +264,7 @@ def update_password(
 @router.delete(
     "/{user_id}",
     status_code=status.HTTP_204_NO_CONTENT,
-    dependencies=[Depends(require_roles("admin"))],
+    dependencies=[Depends(required_roles("admin"))],
     summary="Delete a user by user id",
     responses={
         403: {"model": ErrorResponse, "description": "Don't have enough permission"},

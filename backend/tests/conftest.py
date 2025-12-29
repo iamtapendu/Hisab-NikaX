@@ -7,7 +7,7 @@ from sqlalchemy.orm import sessionmaker
 from app import create_application
 from database.base import Base
 from dependencies.db import get_db
-from dependencies.auth import get_current_refresh_token
+from dependencies.auth import get_current_refresh_token, get_current_user, required_roles
 from core.security import create_access_token, create_refresh_token
 
 
@@ -55,6 +55,14 @@ def client(db_session):
     async def _test_refresh_dep(token=Depends(get_current_refresh_token)):
         return token
 
+    @router.post("/_test/current-user-dep")
+    async def _test_current_user_dep(token=Depends(get_current_user)):
+        return token
+
+    @router.post("/_test/required-roles-dep")
+    async def _test_required_role_dep(token=Depends(required_roles("admin"))):
+        return token
+
     app.include_router(router)
 
     with TestClient(app) as client:
@@ -62,19 +70,25 @@ def client(db_session):
 
 
 @pytest.fixture
-def access_token(test_user):
-    return create_access_token(
-        subject=str(test_user.id),
-        role=test_user.role,
-    )
+def access_token():
+    def _access_token(id="1", role="admin"):
+        return create_access_token(
+            subject=str(id),
+            role=role,
+        )
+
+    return _access_token
 
 
 @pytest.fixture
-def refresh_token(test_user):
-    return create_refresh_token(
-        subject=str(test_user.id),
-        role=test_user.role,
-    )
+def refresh_token():
+    def _refresh_token(id="1", role="admin"):
+        return create_refresh_token(
+            subject=str(id),
+            role=role,
+        )
+
+    return _refresh_token
 
 
 def pytest_itemcollected(item):

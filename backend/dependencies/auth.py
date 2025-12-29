@@ -1,4 +1,5 @@
 from typing import Annotated, Callable
+import re
 
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -6,6 +7,7 @@ from sqlalchemy import select
 
 from dependencies.db import get_db
 from core.security import TokenType, JWTPayload, oauth2_scheme, decode_token
+from core.validators import Pattern
 from modules.users.model import User
 from modules.auth.model import RevokedToken
 
@@ -77,7 +79,7 @@ def get_current_access_token(
     return payload
 
 
-def require_roles(*roles: str) -> Callable:
+def required_roles(*roles: str) -> Callable:
     """
     Dependency factory for role-based access control.
 
@@ -85,17 +87,32 @@ def require_roles(*roles: str) -> Callable:
     """
 
     def _require_roles(
-        token: Annotated[str, Depends(oauth2_scheme)],
+        payload: Annotated[JWTPayload, Depends(get_current_access_token)],
+        current_user: Annotated[User, Depends(get_current_user)],
     ) -> None:
-        payload = decode_token(token, token_type=TokenType.access)
 
+        for value in roles:
+            if not isinstance(value, str):
+                raise ValueError("Role must be string")
+
+            if not re.fullmatch(Pattern.ROLE_REGX, value):
+                raise ValueError("Provided role not supported")
+
+        if payload["role"] != current_user.role:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail={
+                    "msg": "Token with forged role",
+                    "errors": (f"User has '{payload['role']}' instead of {current_user.role}."),
+                },
+            )
         if payload["role"] not in roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail={
                     "msg": "User does not have sufficient permission",
                     "errors": (
-                        f"User has '{payload['role']}'. " f"Required one of {', '.join(roles)}."
+                        f"User has '{payload['role']}'. Required one of {', '.join(roles)}."
                     ),
                 },
             )
