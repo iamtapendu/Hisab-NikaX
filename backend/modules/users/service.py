@@ -241,7 +241,7 @@ def update_password(db: Session, user_id: int, data: UserPasswordUpdate, is_admi
     return user
 
 
-def delete_user(db: Session, user_id):
+def delete_user(db: Session, user_id) -> None:
     user = db.get(User, user_id)
     if not user:
         raise HTTPException(
@@ -258,7 +258,7 @@ def delete_user(db: Session, user_id):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={
-                "msg": "Failed to update user's password",
+                "msg": "Failed to delete user",
                 "errors": f"Database error: {str(e)}",
             },
         )
