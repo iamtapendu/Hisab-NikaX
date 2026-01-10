@@ -11,6 +11,7 @@ from database.session import engine
 
 from modules.auth.routes import router as auth_router
 from modules.users.routes import router as users_router
+from modules.products.routes import router as product_router
 
 # from app.modules.inventory.router import router as inventory_router
 # from app.modules.sales.router import router as sales_router
@@ -53,18 +54,7 @@ def create_application() -> FastAPI:
     # API Routers
     app.include_router(auth_router, prefix=f"{settings.API_PREFIX}/auth")
     app.include_router(users_router, prefix=f"{settings.API_PREFIX}/users")
-
-    # app.include_router(
-    #     inventory_router,
-    #     prefix=f"{settings.API_PREFIX}/inventory",
-    #     tags=["Inventory"],
-    # )
-
-    # app.include_router(
-    #     sales_router,
-    #     prefix=f"{settings.API_PREFIX}/sales",
-    #     tags=["Sales"],
-    # )
+    app.include_router(product_router, prefix=f"{settings.API_PREFIX}/products")
 
     return app
 
