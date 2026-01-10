@@ -1,12 +1,12 @@
 from typing import Tuple, Sequence
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session
-from sqlalchemy import select, func, or_
+from sqlalchemy import select, func, or_, and_
 from fastapi import HTTPException, status
 
 from core.validators import Pattern, validate_map
 from .model import Product
-from .schema import ProductBase, ProductUpdate, ProductRead
+from .schema import ProductBase, ProductUpdate
 
 
 def get_products(db: Session, page: int, per_page: int) -> Tuple[Sequence[Product], dict[str, int]]:
@@ -49,16 +49,29 @@ def get_product(db: Session, product_id: int) -> Product:
     return product
 
 
-def search_products(db: Session, keywords: Sequence[str], per_page: int) -> Sequence[Product]:
+def search_products(
+    db: Session,
+    *,
+    keywords: str | None,
+    page: int = 1,
+    per_page: int = 50,
+    min_price: float | None = None,
+    max_price: float | None = None,
+    in_stock: bool | None = None,
+    brand: str | None = None,
+    unit: str | None = None,
+) -> Tuple[Sequence[Product], dict[str, int]]:
     """
     Service for searching product using specific keywords
     """
-
     stmt = select(Product)
+    conditions = []
 
     if keywords:
-        like = "%" + "%".join(keywords) + "%"
-        stmt = stmt.where(
+        words = [word.strip() for word in keywords.split() if word.strip()]
+
+        like = "%" + "%".join(words) + "%"
+        conditions.append(
             or_(
                 Product.name.ilike(like),
                 Product.brand.ilike(like),
@@ -67,13 +80,44 @@ def search_products(db: Session, keywords: Sequence[str], per_page: int) -> Sequ
             )
         )
 
-    stmt = stmt.limit(per_page)
+    if min_price is not None:
+        conditions.append(Product.sell_price >= min_price)
+
+    if max_price is not None:
+        conditions.append(Product.sell_price <= max_price)
+
+    if in_stock is True:
+        conditions.append(Product.quantity > 0)
+    elif in_stock is False:
+        conditions.append(Product.quantity == 0)
+
+    if brand:
+        conditions.append(Product.brand.ilike(f"%{brand}%"))
+
+    if unit:
+        conditions.append(Product.unit == unit)
+
+    if conditions:
+        stmt = stmt.where(and_(*conditions))
+
+    total = db.execute(select(func.count()).select_from(stmt.subquery())).scalar_one()
+
+    stmt = stmt.order_by(Product.last_updated.desc()).offset((page - 1) * per_page).limit(per_page)
     products = db.execute(stmt).scalars().all()
 
-    return products
+    pages = (total + per_page - 1) // per_page if total else 0
+
+    meta = {
+        "page": page,
+        "per_page": per_page,
+        "total": total,
+        "pages": pages,
+    }
+
+    return products, meta
 
 
-def create_products(db: Session, data: ProductBase) -> Product:
+def create_product(db: Session, data: ProductBase) -> Product:
     """
     Service for creating products along with extra validation of the fields data.
     """
@@ -216,7 +260,7 @@ def update_product(db: Session, product_id: int, data: ProductUpdate) -> Product
 
 def delete_product(db: Session, product_id) -> None:
     product = db.get(Product, product_id)
-    if not product_id:
+    if not product:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"msg": "Product not found", "errors": None},

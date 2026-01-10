@@ -40,5 +40,10 @@ class Product(Base):
     model = mapped_column(String(50), nullable=True)
     image = mapped_column(String(100), nullable=True)
 
-    created_at = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc),nullable=False)
-    last_updated = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    last_updated = mapped_column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )

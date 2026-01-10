@@ -33,8 +33,8 @@ class ProductBase(BaseModel):
         le=99999,
     )
 
-    mrp: float = Field(
-        default=0,
+    mrp: float | None = Field(
+        default=None,
         ge=0,
         le=99999,
     )
@@ -72,12 +72,6 @@ class ProductBase(BaseModel):
     )
 
     model: str | None = Field(
-        default=None,
-        min_length=3,
-        max_length=50,
-    )
-
-    brand: str | None = Field(
         default=None,
         min_length=3,
         max_length=50,
@@ -135,13 +129,12 @@ class ProductUpdate(BaseModel):
     gst: float | None = Field(
         default=None,
         ge=0,
-        lt=1,
+        le=40,
     )
 
     quantity: int | None = Field(
         default=None,
         ge=0,
-        lt=1,
     )
 
     unit: str | None = Field(
@@ -158,12 +151,6 @@ class ProductUpdate(BaseModel):
     )
 
     model: str | None = Field(
-        default=None,
-        min_length=3,
-        max_length=50,
-    )
-
-    brand: str | None = Field(
         default=None,
         min_length=3,
         max_length=50,
