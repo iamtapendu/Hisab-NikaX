@@ -24,19 +24,19 @@ class ProductBase(BaseModel):
     buy_price: float = Field(
         ...,
         ge=0,
-        le=99999,
+        le=999999,
     )
 
     sell_price: float = Field(
         ...,
         ge=0,
-        le=99999,
+        le=999999,
     )
 
     mrp: float | None = Field(
         default=None,
         ge=0,
-        le=99999,
+        le=999999,
     )
 
     hsn_code: str | None = Field(
@@ -49,20 +49,20 @@ class ProductBase(BaseModel):
     gst: float | None = Field(
         default=None,
         ge=0,
-        lt=1,
+        lt=40,
     )
 
     quantity: int | None = Field(
         default=0,
         ge=0,
-        lt=1,
+        lt=999999,
     )
 
     unit: str | None = Field(
         default=None,
         min_length=1,
         max_length=20,
-        pattern=r"^(pcs|kg|gram|grs|ltr|ml|box|pkt|set|dozen)$",
+        pattern=r"^(pcs|pair|kg|gram|grs|ltr|ml|box|pkt|set|dozen)$",
     )
 
     brand: str | None = Field(
@@ -104,19 +104,19 @@ class ProductUpdate(BaseModel):
     buy_price: float | None = Field(
         default=None,
         ge=0,
-        le=99999,
+        le=999999,
     )
 
     sell_price: float | None = Field(
         default=None,
         ge=0,
-        le=99999,
+        le=999999,
     )
 
     mrp: float | None = Field(
         default=None,
         ge=0,
-        le=99999,
+        le=999999,
     )
 
     hsn_code: str | None = Field(
@@ -135,13 +135,14 @@ class ProductUpdate(BaseModel):
     quantity: int | None = Field(
         default=None,
         ge=0,
+        lt=999999,
     )
 
     unit: str | None = Field(
         default=None,
         min_length=1,
         max_length=20,
-        pattern=r"^(pcs|kg|gram|grs|ltr|ml|box|pkt|set|dozen)$",
+        pattern=r"^(pcs|pair|kg|gram|grs|ltr|ml|box|pkt|set|dozen)$",
     )
 
     brand: str | None = Field(
