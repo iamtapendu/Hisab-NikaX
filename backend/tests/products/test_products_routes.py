@@ -247,7 +247,7 @@ class TestTS002:
         assert res.status_code == 422
 
     @pytest.mark.case("TC005")
-    def test_without_login(self, client):
+    def test_without_authentication(self, client):
         """
         Test Case: TC005
 
@@ -258,6 +258,93 @@ class TestTS002:
         body = res.json()
 
         print(body)
+        assert res.status_code == 401
+
+
+@pytest.mark.PRODUCTS
+@pytest.mark.scenario("TS003")
+class TestTS003:
+    """
+    Module: PRODUCTS
+
+    Test Scenario: TS003
+
+    Description: fetch product data by id
+    """
+
+    @pytest.mark.case("TC001")
+    def test_valid_roles_access(self, client, create_user, login, create_product):
+        """
+        Test Case: TC001
+
+        Description: Verify with only manager, admin and staff roles are able to fetch product data by id
+        """
+        user = create_user()
+        access, _ = login(user.username)
+        create_product(name="product1")
+
+        headers = {"Authorization": f"Bearer {access}"}
+        res = client.get("/api/v1/products/1", headers=headers)
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 200
+
+        user = create_user(username="manager", role="manager")
+        access, _ = login(user.username)
+        headers = {"Authorization": f"Bearer {access}"}
+        res = client.get("/api/v1/products/1", headers=headers)
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 200
+
+        user = create_user(username="staff", role="staff")
+        access, _ = login(user.username)
+        headers = {"Authorization": f"Bearer {access}"}
+        res = client.get("/api/v1/products/1", headers=headers)
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 200
+
+        user = create_user(username="guest", role="guest")
+        access, _ = login(user.username)
+        headers = {"Authorization": f"Bearer {access}"}
+        res = client.get("/api/v1/products/1", headers=headers)
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 403
+
+    @pytest.mark.case("TC002")
+    def test_product_with_invalid_id(self, client, create_user, login):
+        """
+        Test Case: TC002
+
+        Description: Verify users not able to fetch data with invalid id
+        """
+        user = create_user()
+        access, _ = login(user.username)
+
+        headers = {"Authorization": f"Bearer {access}"}
+        res = client.get("/api/v1/products/1", headers=headers)
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 404
+
+    @pytest.mark.case("TC003")
+    def test_product_without_authentication(self, client, create_user, login):
+        """
+        Test Case: TC003
+
+        Description: Verify not able access products end point without valid login
+        """
+        res = client.get("/api/v1/products/1")
+        body = res.json()
+        print(body)
+
         assert res.status_code == 401
 
 
