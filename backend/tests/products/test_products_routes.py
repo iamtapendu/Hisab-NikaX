@@ -59,8 +59,17 @@ def login(client):
 
 @pytest.fixture
 def create_product(db_session):
-    def _create_product(name, buy_price="10", sell_price="20"):
-        product = Product(name=name, buy_price=buy_price, sell_price=sell_price)
+    def _create_product(
+        name, buy_price="10", sell_price="20", quantity=1, unit="pcs", brand="company"
+    ):
+        product = Product(
+            name=name,
+            buy_price=buy_price,
+            sell_price=sell_price,
+            quantity=quantity,
+            unit=unit,
+            brand=brand,
+        )
 
         db_session.add(product)
         db_session.commit()
@@ -346,6 +355,288 @@ class TestTS003:
         print(body)
 
         assert res.status_code == 401
+
+
+@pytest.mark.PRODUCTS
+@pytest.mark.scenario("TS004")
+class TestTS004:
+    """
+    Module: PRODUCTS
+
+    Test Scenario: TS004
+
+    Description: search product data
+    """
+
+    @pytest.mark.case("TC001")
+    def test_valid_roles_access(self, client, create_user, login, create_product):
+        """
+        Test Case: TC001
+
+        Description: Verify only manager, admin and staff are able to search
+        """
+        user = create_user()
+        access, _ = login(user.username)
+        create_product(name="product brand model color size")
+
+        headers = {"Authorization": f"Bearer {access}"}
+        res = client.get("/api/v1/products/search", headers=headers)
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 200
+
+        user = create_user(username="manager", role="manager")
+        access, _ = login(user.username)
+        headers = {"Authorization": f"Bearer {access}"}
+        res = client.get("/api/v1/products/search", headers=headers)
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 200
+
+        user = create_user(username="staff", role="staff")
+        access, _ = login(user.username)
+        headers = {"Authorization": f"Bearer {access}"}
+        res = client.get("/api/v1/products/search", headers=headers)
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 200
+
+        user = create_user(username="guest", role="guest")
+        access, _ = login(user.username)
+        headers = {"Authorization": f"Bearer {access}"}
+        res = client.get("/api/v1/products/search", headers=headers)
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 403
+
+    @pytest.mark.case("TC002")
+    def test_search_by_keyword(self, client, create_user, login, create_product):
+        """
+        Test Case: TC002
+
+        Description: Verify searching by keyword working perfectly
+        """
+        user = create_user()
+        access, _ = login(user.username)
+        create_product(name="Red Shirt Small Cotton")
+        create_product(name="Blue Shirt Large Denim")
+        create_product(name="Black Shoes Medium Leather")
+
+        headers = {"Authorization": f"Bearer {access}"}
+        res = client.get("/api/v1/products/search?keywords=shirt", headers=headers)
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 200
+        assert body["meta"]["total"] == 2
+        assert all("shirt" in p["name"].lower() for p in body["data"])
+
+        res = client.get("/api/v1/products/search?keywords=red small", headers=headers)
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 200
+        assert body["meta"]["total"] == 1
+        assert body["data"][0]["name"].lower() == "red shirt small cotton"
+
+        res = client.get("/api/v1/products/search?keywords=green", headers=headers)
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 200
+        assert body["meta"]["total"] == 0
+        assert body["data"] == []
+
+    @pytest.mark.case("TC003")
+    def test_search_without_authentication(self, client, create_user, login, create_product):
+        """
+        Test Case: TC003
+
+        Description: Verify not able access products/search end point without valid login
+        """
+        res = client.get("/api/v1/products/search")
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 401
+
+    @pytest.mark.case("TC004")
+    def test_search_filters_working(self, client, create_user, login, create_product):
+        """
+        Test Case: TC004
+
+        Description: Verify filters are working as expected
+        """
+        user = create_user(role="admin")
+        access, _ = login(user.username)
+        headers = {"Authorization": f"Bearer {access}"}
+
+        create_product(name="Red Shirt", brand="Nike", unit="pcs", sell_price=500, quantity=10)
+        create_product(name="Blue Shirt", brand="Adidas", unit="pcs", sell_price=1500, quantity=0)
+        create_product(name="Black Shoes", brand="Nike", unit="pair", sell_price=3000, quantity=5)
+
+        # Act & Assert: Filter by brand
+        res = client.get("/api/v1/products/search?brand=nike", headers=headers)
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 200
+        assert body["meta"]["total"] == 2
+        assert all(p["brand"].lower() == "nike" for p in body["data"])
+
+        # Act & Assert: Filter by price range
+        res = client.get("/api/v1/products/search?min_price=1000&max_price=2000", headers=headers)
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 200
+        assert body["meta"]["total"] == 1
+        assert body["data"][0]["name"] == "Blue Shirt"
+
+        # Act & Assert: Filter by stock availability (in stock)
+        res = client.get("/api/v1/products/search?in_stock=true", headers=headers)
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 200
+        assert body["meta"]["total"] == 2
+        assert all(p["quantity"] > 0 for p in body["data"])
+
+        # Act & Assert: Filter by unit
+        res = client.get("/api/v1/products/search?unit=pcs", headers=headers)
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 200
+        assert body["meta"]["total"] == 2
+        assert all(p["unit"] == "pcs" for p in body["data"])
+
+        # Act & Assert: Filter by stock availability (out of stock)
+        res = client.get("/api/v1/products/search?in_stock=false", headers=headers)
+        body = res.json()
+
+        assert res.status_code == 200
+        assert body["meta"]["total"] == 1
+        assert body["data"][0]["quantity"] == 0
+
+        # Act & Assert: Combined filters
+        res = client.get(
+            "/api/v1/products/search?brand=nike&min_price=1000&in_stock=true", headers=headers
+        )
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 200
+        assert body["meta"]["total"] == 1
+        assert body["data"][0]["name"] == "Black Shoes"
+
+    @pytest.mark.case("TC005")
+    def test_search_pagination_works_correctly(self, client, create_user, login, create_product):
+        """
+        Test Case: TC005
+
+        Description: Verify pagination works correctly in search results
+        """
+
+        # Arrange
+        user = create_user(role="admin")
+        access, _ = login(user.username)
+        headers = {"Authorization": f"Bearer {access}"}
+
+        # Create multiple products to enforce pagination
+        for i in range(1, 26):
+            create_product(
+                name=f"Product {i}", brand="PaginationTest", sell_price=100 + i, quantity=10
+            )
+
+        # Act: Page 1
+        res = client.get(
+            "/api/v1/products/search?keywords=Product&page=1&per_page=10", headers=headers
+        )
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 200
+        assert body["meta"]["page"] == 1
+        assert body["meta"]["per_page"] == 10
+        assert body["meta"]["total"] == 25
+        assert body["meta"]["pages"] == 3
+        assert len(body["data"]) == 10
+
+        # Act: Page 2
+        res = client.get(
+            "/api/v1/products/search?keywords=Product&page=2&per_page=10", headers=headers
+        )
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 200
+        assert body["meta"]["page"] == 2
+        assert len(body["data"]) == 10
+        assert body["data"][0]["name"] == "Product 15" # loaded in reverse oreder due to default order by last updated
+
+        # Act: Page 3 (last page)
+        res = client.get(
+            "/api/v1/products/search?keywords=Product&page=3&per_page=10", headers=headers
+        )
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 200
+        assert body["meta"]["page"] == 3
+        assert len(body["data"]) == 5
+        assert body["data"][-1]["name"] == "Product 1"
+
+        # Act: Page beyond available pages
+        res = client.get(
+            "/api/v1/products/search?keywords=Product&page=4&per_page=10", headers=headers
+        )
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 200
+        assert body["meta"]["page"] == 4
+        assert body["meta"]["total"] == 25
+        assert len(body["data"]) == 0
+
+    @pytest.mark.case("TC006")
+    def test_search_returns_empty_result_with_valid_pagination(self, client, create_user, login):
+        """
+        Test Case: TC006
+
+        Description: Verify empty search result returns empty list with valid pagination metadata
+        """
+
+        # Arrange
+        user = create_user(role="admin")
+        access, _ = login(user.username)
+        headers = {"Authorization": f"Bearer {access}"}
+
+        # Act: Search with keyword that does not exist
+        res = client.get(
+            "/api/v1/products/search?keywords=nonexistentproduct&page=1&per_page=10",
+            headers=headers,
+        )
+        body = res.json()
+        print(body)
+        # Assert
+        assert res.status_code == 200
+
+        # Data assertions
+        assert "data" in body
+        assert isinstance(body["data"], list)
+        assert len(body["data"]) == 0
+
+        # Pagination assertions
+        assert "meta" in body
+        assert body["meta"]["page"] == 1
+        assert body["meta"]["per_page"] == 10
+        assert body["meta"]["total"] == 0
+        assert body["meta"]["pages"] == 0
 
 
 # @pytest.mark.PRODUCTS
