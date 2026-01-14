@@ -16,7 +16,7 @@ class Pattern:
     PASSWORD_REGX = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)" r"(?=.*[@$!%*?&#^])[A-Za-z\d@$!%*?&#^]{8,}$"
     ROLE_REGX = r"^(admin|manager|staff|guest)$"
     PAYMENT_STATUS_REGEX = r"^(paid|pending|partial)$"
-    UNIT_REGEX = r"^(pcs|kg|gram|grs|ltr|ml|box|pkt|set|dozen)$"
+    UNIT_REGEX = r"^(pcs|pair|kg|gram|grs|ltr|ml|box|pkt|set|dozen)$"
     IMAGE_REGX = r"^[A-Za-z0-9_/\-]+\.(jpg|jpeg|png)$"
     ADDRESS_REGX = r"^[A-Za-z0-9\s,\./\-]{5,200}$"
     GST_REGX = r"^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$"
