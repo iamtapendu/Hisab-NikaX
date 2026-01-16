@@ -46,12 +46,15 @@ def validate_map(data, validators: dict[str, str]):
         if value is None:
             continue
 
-        if not isinstance(value, str):
+        if isinstance(value, float) or isinstance(value, int):
+            value = str(value)
+
+        elif not isinstance(value, str):
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail={
                     "msg": "Validation error",
-                    "errors": f"{field} must be a string",
+                    "errors": f"{field} must be a string or numeric",
                 },
             )
         if not re.fullmatch(pattern, value):
