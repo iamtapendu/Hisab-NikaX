@@ -1,7 +1,6 @@
 import os
 import pytest
 
-
 from modules.users.model import User
 from modules.products.model import Product
 from core.security import hash_password
@@ -1411,103 +1410,90 @@ class TestTS006:
         assert res.status_code == 422
 
 
-# @pytest.mark.PRODUCTS
-# @pytest.mark.scenario("TS005")
-# class TestTS005:
-#     """
-#     Module: PRODUCTS
+@pytest.mark.PRODUCTS
+@pytest.mark.scenario("TS007")
+class TestTS007:
+    """
+    Module: PRODUCTS
 
-#     Test Scenario: TS005
+    Test Scenario: TS007
 
-#     Description: Users with valid login credentials along with role able to delete product
-#     """
+    Description: Able to delete product
+    """
 
-#     @pytest.mark.case("TC001")
-#     def test_delete_product_without_login(self, client, create_product):
-#         """
-#         Test Case: TC001
+    @pytest.mark.case("TC001")
+    def test_delete_product_without_login(self, client, create_product):
+        """
+        Test Case: TC001
 
-#         Description: Verify without valid login credential no able to delete products api
-#         """
-#         create_product(name="product")
-#         res = client.delete("/api/v1/products/1")
-#         json = res.get_json()
+        Description: Verify without valid login credential no able to delete products
+        """
+        create_product(name="product")
+        res = client.delete("/api/v1/products/1")
+        print(res.json())
 
-#         assert res.status_code == 401
-#         assert json["code"] == 401
-#         assert json["status"] == "fail"
-#         assert "missing " in json["errors"].lower()
+        assert res.status_code == 401
 
-#     @pytest.mark.case("TC002")
-#     def test_delete_product_with_different_roles(self, client, create_user, login, create_product):
-#         """
-#         Test Case: TC002
+    @pytest.mark.case("TC002")
+    def test_delete_product_with_different_roles(self, client, create_user, login, create_product):
+        """
+        Test Case: TC002
 
-#         Description: Verify with only admin are allowed for delete product api
-#         """
-#         create_product(name="product")
-#         guest = create_user(username="usr1", role="guest")
-#         json = login(guest.username, "TestPass123@")
-#         headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+        Description: Verify with only admin are allowed for delete product api
+        """
+        create_product(name="product")
+        
+        user = create_user(username="guest", role="guest")
+        access, _ = login(user.username)
+        headers = {"Authorization": f"Bearer {access}"}
 
-#         res = client.delete("/api/v1/products/1", headers=headers)
-#         json = res.get_json()
+        res = client.delete("/api/v1/products/1", headers=headers)
+        print(res.json())
 
-#         assert res.status_code == 403
-#         assert json["code"] == 403
-#         assert json["status"] == "fail"
-#         assert "forbidden" in json["errors"].lower()
+        assert res.status_code == 403
 
-#         staff = create_user(username="usr2", role="staff")
-#         json = login(staff.username, "TestPass123@")
-#         headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+        user = create_user(username="staff", role="staff")
+        access, _ = login(user.username)
+        headers = {"Authorization": f"Bearer {access}"}
 
-#         res = client.delete("/api/v1/products/1", headers=headers)
-#         json = res.get_json()
+        res = client.delete("/api/v1/products/1", headers=headers)
+        print(res.json())
 
-#         assert res.status_code == 403
-#         assert json["code"] == 403
-#         assert json["status"] == "fail"
+        assert res.status_code == 403
 
-#         manager = create_user(username="usr3", role="manager")
-#         json = login(manager.username, "TestPass123@")
-#         headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+        user = create_user(username="manager", role="manager")
+        access, _ = login(user.username)
+        headers = {"Authorization": f"Bearer {access}"}
 
-#         res = client.delete("/api/v1/products/1", headers=headers)
-#         json = res.get_json()
+        res = client.delete("/api/v1/products/1", headers=headers)
+        body = res.json()
+        print(body)
 
-#         assert res.status_code == 403
-#         assert json["code"] == 403
-#         assert json["status"] == "fail"
+        assert res.status_code == 403
 
-#         admin = create_user(username="usr4", role="admin")
-#         json = login(admin.username, "TestPass123@")
-#         headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+        user = create_user(username="admin")
+        access, _ = login(user.username)
+        headers = {"Authorization": f"Bearer {access}"}
 
-#         res = client.delete("/api/v1/products/1", headers=headers)
-#         json = res.get_json()
+        res = client.delete("/api/v1/products/1", headers=headers)
 
-#         assert res.status_code == 200
-#         assert json["code"] == 200
-#         assert json["status"] == "success"
+        assert res.status_code == 204
 
-#     @pytest.mark.case("TC003")
-#     def test_delete_product_with_invalid_id(self, client, create_user, login, create_product):
-#         """
-#         Test Case: TC003
+    @pytest.mark.case("TC003")
+    def test_delete_product_with_invalid_id(self, client, create_user, login, create_product):
+        """
+        Test Case: TC003
 
-#         Description: Verify users not able to delete product with invalid id
-#         """
-#         create_product("product")
+        Description: Verify users not able to delete product with invalid id
+        """
+        create_product("product")
 
-#         admin = create_user(username="usr4", role="admin")
-#         json = login(admin.username, "TestPass123@")
-#         headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
+        user = create_user(username="admin")
+        access, _ = login(user.username)
+        headers = {"Authorization": f"Bearer {access}"}
 
-#         res = client.put("/api/v1/products/2", headers=headers)
-#         json = res.get_json()
+        res = client.delete("/api/v1/products/2", headers=headers)
+        body = res.json()
+        print(body)
 
-#         assert res.status_code == 404
-#         assert json["code"] == 404
-#         assert json["status"] == "fail"
-#         assert "not found" in json["errors"].lower()
+        assert res.status_code == 404
