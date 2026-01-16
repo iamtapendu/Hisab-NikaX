@@ -577,7 +577,9 @@ class TestTS004:
         assert res.status_code == 200
         assert body["meta"]["page"] == 2
         assert len(body["data"]) == 10
-        assert body["data"][0]["name"] == "Product 15" # loaded in reverse oreder due to default order by last updated
+        assert (
+            body["data"][0]["name"] == "Product 15"
+        )  # loaded in reverse oreder due to default order by last updated
 
         # Act: Page 3 (last page)
         res = client.get(
@@ -639,689 +641,636 @@ class TestTS004:
         assert body["meta"]["pages"] == 0
 
 
-# @pytest.mark.PRODUCTS
-# @pytest.mark.scenario("TS003")
-# class TestTS003:
-#     """
-#     Module: PRODUCTS
-
-#     Test Scenario: TS003
-
-#     Description: Users with valid login credentials along with role able to create new product
-#     """
-
-#     @pytest.mark.case("TC001")
-#     def test_create_product_without_login(self, client):
-#         """
-#         Test Case: TC001
-
-#         Description: Verify without valid login credential no able to create products api
-#         """
-#         payload = {"name": "Product", "buy_price": "100", "sell_price": "110"}
-#         res = client.post("/api/products/", json=payload)
-#         json = res.get_json()
-
-#         assert res.status_code == 401
-#         assert json["code"] == 401
-#         assert json["status"] == "fail"
-#         assert "missing " in json["errors"].lower()
-
-#     @pytest.mark.case("TC002")
-#     def test_create_product_with_different_roles(self, client, create_user, login):
-#         """
-#         Test Case: TC002
-
-#         Description: Verify with only manager, admin roles are allowed for product create api
-#         """
-#         payload = {"name": "Product", "buy_price": "100", "sell_price": "110"}
-#         guest = create_user(username="usr1", role="guest")
-#         json = login(guest.username, "TestPass123@")
-#         headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
-
-#         res = client.post("/api/products/", headers=headers, json=payload)
-#         json = res.get_json()
-
-#         assert res.status_code == 403
-#         assert json["code"] == 403
-#         assert json["status"] == "fail"
-#         assert "forbidden" in json["errors"].lower()
-
-#         staff = create_user(username="usr2", role="staff")
-#         json = login(staff.username, "TestPass123@")
-#         headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
-
-#         res = client.post("/api/products/", headers=headers, json=payload)
-#         json = res.get_json()
-
-#         assert res.status_code == 403
-#         assert json["code"] == 403
-#         assert json["status"] == "fail"
-
-#         manager = create_user(username="usr3", role="manager")
-#         json = login(manager.username, "TestPass123@")
-#         headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
-
-#         res = client.post("/api/products/", headers=headers, json=payload)
-#         json = res.get_json()
-
-#         assert res.status_code == 201
-#         assert json["code"] == 201
-#         assert json["status"] == "success"
-#         assert json["data"]["name"] == "Product"
-
-#         admin = create_user(username="usr4", role="admin")
-#         json = login(admin.username, "TestPass123@")
-#         headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
-
-#         payload = {"name": "Product 2", "buy_price": "100", "sell_price": "110"}
-#         res = client.post("/api/products/", headers=headers, json=payload)
-#         json = res.get_json()
-
-#         assert res.status_code == 201
-#         assert json["code"] == 201
-#         assert json["status"] == "success"
-#         assert json["data"]["name"] == "Product 2"
-
-#     @pytest.mark.case("TC003")
-#     def test_create_product_without_required_data(self, client, create_user, login):
-#         """
-#         Test Case: TC003
-
-#         Description: Verify without mandatory data no one is able to create product
-#         """
-#         admin = create_user(username="usr4", role="admin")
-#         json = login(admin.username, "TestPass123@")
-#         headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
-
-#         payload = {"name": "Product", "buy_price": "100", "sell_price": ""}
-#         res = client.post("/api/products/", headers=headers, json=payload)
-#         json = res.get_json()
-
-#         assert res.status_code == 400
-#         assert json["code"] == 400
-#         assert json["status"] == "fail"
-#         assert "missing mandatory fields" in json["errors"].lower()
-
-#         payload = {"name": "Product", "sell_price": "110"}
-#         res = client.post("/api/products/", headers=headers, json=payload)
-#         json = res.get_json()
-
-#         assert res.status_code == 400
-#         assert json["code"] == 400
-#         assert json["status"] == "fail"
-#         assert "missing mandatory fields" in json["errors"].lower()
-
-#         payload = {"buy_price": "100", "sell_price": ""}
-#         res = client.post("/api/products/", headers=headers, json=payload)
-#         json = res.get_json()
-
-#         assert res.status_code == 400
-#         assert json["code"] == 400
-#         assert json["status"] == "fail"
-#         assert "missing mandatory fields" in json["errors"].lower()
-
-#     @pytest.mark.case("TC004")
-#     def test_create_product_duplicate_name(self, client, create_user, login):
-#         """
-#         Test Case: TC004
-
-#         Description: Verify product name must be unique
-#         """
-#         admin = create_user(username="usr4", role="admin")
-#         json = login(admin.username, "TestPass123@")
-#         headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
-
-#         payload = {"name": "Product", "buy_price": "100", "sell_price": "120"}
-#         res = client.post("/api/products/", headers=headers, json=payload)
-#         json = res.get_json()
-
-#         assert res.status_code == 201
-#         assert json["code"] == 201
-#         assert json["status"] == "success"
-
-#         res = client.post("/api/products/", headers=headers, json=payload)
-#         json = res.get_json()
-
-#         assert res.status_code == 409
-#         assert json["code"] == 409
-#         assert json["status"] == "fail"
-#         assert "product name already exists" in json["errors"].lower()
-
-#     @pytest.mark.case("TC005")
-#     def test_create_product_invalid_name(self, client, create_user, login):
-#         """
-#         Test Case: TC005
-
-#         Description: Verify product can not be created with invalid name
-#         """
-
-#         # Admin account
-#         user = create_user()
-#         json = login(user.username, "TestPass123@")
-#         headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
-
-#         invalid_vals = [
-#             "ab",
-#             "abc",
-#             "a b",
-#             "abc##",
-#             "abc123!!",
-#             "abc/def?",
-#             "product" * 50,
-#             "abc&def",
-#             "<leading",
-#             "trailing>",
-#             "middle@dot",
-#             "_underscore",
-#             "abc*123",
-#             "abc%abc",
-#             "product()",
-#             "product+",
-#             "product;",
-#             "product'",
-#             "product|",
-#             "product[]",
-#             "product{}",
-#             "product=",
-#         ]
-
-#         for val in invalid_vals:
-#             payload = {"name": val, "buy_price": "100", "sell_price": "120"}
-#             res = client.post("/api/products/", headers=headers, json=payload)
-#             json = res.get_json()
-
-#             assert res.status_code == 400
-#             assert json["code"] == 400
-#             assert json["status"] == "fail"
-#             assert "invalid" in json["errors"].lower()
-
-#     @pytest.mark.case("TC006")
-#     def test_create_product_invalid_description(self, client, create_user, login):
-#         """
-#         Test Case: TC006
-
-#         Description: Verify product can not be created with invalid description
-#         """
-
-#         # Admin account
-#         user = create_user()
-#         json = login(user.username, "TestPass123@")
-#         headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
-
-#         invalid_vals = [
-#             "ab",
-#             "abc",
-#             "a b",
-#             "abc##",
-#             "abc123!!",
-#             "abc/def?",
-#             "product" * 50,
-#             "abc&def",
-#             "<leading",
-#             "trailing>",
-#             "middle@dot",
-#             "_underscore",
-#             "abc*123",
-#             "abc%abc",
-#             "product()",
-#             "product+",
-#             "product;",
-#             "product'",
-#             "product|",
-#             "product[]",
-#             "product{}",
-#             "product=",
-#         ]
-
-#         for val in invalid_vals:
-#             payload = {
-#                 "name": "product",
-#                 "buy_price": "100",
-#                 "sell_price": "120",
-#                 "description": val,
-#             }
-#             res = client.post("/api/products/", headers=headers, json=payload)
-#             json = res.get_json()
-
-#             assert res.status_code == 400
-#             assert json["code"] == 400
-#             assert json["status"] == "fail"
-#             assert "invalid" in json["errors"].lower()
-
-#     @pytest.mark.case("TC007")
-#     def test_create_product_invalid_buy_price(self, client, create_user, login):
-#         """
-#         Test Case: TC007
-
-#         Description: Verify product can not be created with invalid buy_price
-#         """
-
-#         # Admin account
-#         user = create_user()
-#         json = login(user.username, "TestPass123@")
-#         headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
-
-#         invalid_vals = [
-#             "-",
-#             "--12",
-#             "12-",
-#             "12.",
-#             "-.",
-#             "abc",
-#             "12a",
-#             "1.2.3",
-#             "+-12",
-#             "12..3",
-#             "1e10",
-#             "--",
-#             "-.5",
-#         ]
-
-#         for val in invalid_vals:
-#             payload = {
-#                 "name": "product",
-#                 "buy_price": val,
-#                 "sell_price": "120",
-#             }
-#             res = client.post("/api/products/", headers=headers, json=payload)
-#             json = res.get_json()
-
-#             assert res.status_code == 400
-#             assert json["code"] == 400
-#             assert json["status"] == "fail"
-#             assert "invalid" in json["errors"].lower()
-
-#     @pytest.mark.case("TC008")
-#     def test_create_product_invalid_sell_price(self, client, create_user, login):
-#         """
-#         Test Case: TC008
-
-#         Description: Verify product can not be created with invalid sell_price
-#         """
-
-#         # Admin account
-#         user = create_user()
-#         json = login(user.username, "TestPass123@")
-#         headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
-
-#         invalid_vals = [
-#             "-",
-#             "--12",
-#             "12-",
-#             "12.",
-#             "-.",
-#             "abc",
-#             "12a",
-#             "1.2.3",
-#             "+-12",
-#             "12..3",
-#             "1e10",
-#             "--",
-#             "-.5",
-#         ]
-
-#         for val in invalid_vals:
-#             payload = {
-#                 "name": "product",
-#                 "buy_price": "100",
-#                 "sell_price": val,
-#             }
-#             res = client.post("/api/products/", headers=headers, json=payload)
-#             json = res.get_json()
-
-#             assert res.status_code == 400
-#             assert json["code"] == 400
-#             assert json["status"] == "fail"
-#             assert "invalid" in json["errors"].lower()
-
-#     @pytest.mark.case("TC009")
-#     def test_create_product_invalid_mrp(self, client, create_user, login):
-#         """
-#         Test Case: TC009
-
-#         Description: Verify product can not be created with invalid mrp
-#         """
-
-#         # Admin account
-#         user = create_user()
-#         json = login(user.username, "TestPass123@")
-#         headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
-
-#         invalid_vals = [
-#             "-",
-#             "--12",
-#             "12-",
-#             "12.",
-#             "-.",
-#             "abc",
-#             "12a",
-#             "1.2.3",
-#             "+-12",
-#             "12..3",
-#             "1e10",
-#             "--",
-#             "-.5",
-#         ]
-
-#         for val in invalid_vals:
-#             payload = {"name": "product", "buy_price": "100", "sell_price": "120", "mrp": val}
-#             res = client.post("/api/products/", headers=headers, json=payload)
-#             json = res.get_json()
-
-#             assert res.status_code == 400
-#             assert json["code"] == 400
-#             assert json["status"] == "fail"
-#             assert "invalid" in json["errors"].lower()
-
-#     @pytest.mark.case("TC010")
-#     def test_create_product_invalid_hsn_code(self, client, create_user, login):
-#         """
-#         Test Case: TC010
-
-#         Description: Verify product can not be created with invalid hsn_code
-#         """
-
-#         # Admin account
-#         user = create_user()
-#         json = login(user.username, "TestPass123@")
-#         headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
-
-#         invalid_vals = [
-#             "123",
-#             "12345",
-#             "1234567",
-#             "123456789",
-#             "abcd",
-#             "12a456",
-#             "20231",
-#             "000",
-#             "00000",
-#             "20-01",
-#             "2023 01",
-#             "2023/01",
-#             "999",
-#             "1234567890",
-#         ]
-
-#         for val in invalid_vals:
-#             payload = {"name": "product", "buy_price": "100", "sell_price": "120", "hsn_code": val}
-#             res = client.post("/api/products/", headers=headers, json=payload)
-#             json = res.get_json()
-
-#             assert res.status_code == 400
-#             assert json["code"] == 400
-#             assert json["status"] == "fail"
-#             assert "invalid" in json["errors"].lower()
-
-#     @pytest.mark.case("TC011")
-#     def test_create_product_invalid_gst(self, client, create_user, login):
-#         """
-#         Test Case: TC011
-
-#         Description: Verify product can not be created with invalid gst
-#         """
-
-#         # Admin account
-#         user = create_user()
-#         json = login(user.username, "TestPass123@")
-#         headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
-
-#         invalid_vals = [
-#             "-",
-#             "--12",
-#             "12-",
-#             "12.",
-#             "-.",
-#             "abc",
-#             "12a",
-#             "1.2.3",
-#             "+-12",
-#             "12..3",
-#             "1e10",
-#             "--",
-#             "-.5",
-#             "10%",
-#         ]
-
-#         for val in invalid_vals:
-#             payload = {"name": "product", "buy_price": "100", "sell_price": "120", "gst": val}
-#             res = client.post("/api/products/", headers=headers, json=payload)
-#             json = res.get_json()
-
-#             assert res.status_code == 400
-#             assert json["code"] == 400
-#             assert json["status"] == "fail"
-#             assert "invalid" in json["errors"].lower()
-
-#     @pytest.mark.case("TC012")
-#     def test_create_product_invalid_quantity(self, client, create_user, login):
-#         """
-#         Test Case: TC012
-
-#         Description: Verify product can not be created with invalid quantity
-#         """
-
-#         # Admin account
-#         user = create_user()
-#         json = login(user.username, "TestPass123@")
-#         headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
-
-#         invalid_vals = [
-#             "-",
-#             "--12",
-#             "12-",
-#             "12.",
-#             "-.",
-#             "abc",
-#             "12a",
-#             "1.2.3",
-#             "+-12",
-#             "12..3",
-#             "1e10",
-#             "--",
-#             "-.5",
-#             "10%",
-#         ]
-
-#         for val in invalid_vals:
-#             payload = {"name": "product", "buy_price": "100", "sell_price": "120", "quantity": val}
-#             res = client.post("/api/products/", headers=headers, json=payload)
-#             json = res.get_json()
-
-#             assert res.status_code == 400
-#             assert json["code"] == 400
-#             assert json["status"] == "fail"
-#             assert "invalid" in json["errors"].lower()
-
-#     @pytest.mark.case("TC013")
-#     def test_create_product_invalid_unit(self, client, create_user, login):
-#         """
-#         Test Case: TC013
-
-#         Description: Verify product can not be created with invalid unit
-#         """
-
-#         # Admin account
-#         user = create_user()
-#         json = login(user.username, "TestPass123@")
-#         headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
-
-#         invalid_vals = [
-#             "pc",
-#             "kgs",
-#             "grams",
-#             "litre",
-#             "liter",
-#             "ltr.",
-#             "mls",
-#             "boxes",
-#             "packet",
-#             "sets",
-#             "doz",
-#             "dozens",
-#             "PCS",
-#             "Kg",
-#             "123",
-#             "box1",
-#         ]
-
-#         for val in invalid_vals:
-#             payload = {"name": "product", "buy_price": "100", "sell_price": "120", "unit": val}
-#             res = client.post("/api/products/", headers=headers, json=payload)
-#             json = res.get_json()
-
-#             assert res.status_code == 400
-#             assert json["code"] == 400
-#             assert json["status"] == "fail"
-#             assert "invalid" in json["errors"].lower()
-
-#     @pytest.mark.case("TC014")
-#     def test_create_product_invalid_brand(self, client, create_user, login):
-#         """
-#         Test Case: TC014
-
-#         Description: Verify product can not be created with invalid brand
-#         """
-
-#         # Admin account
-#         user = create_user()
-#         json = login(user.username, "TestPass123@")
-#         headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
-
-#         invalid_vals = [
-#             "ab",
-#             "abc",
-#             "a b",
-#             "abc##",
-#             "abc123!!",
-#             "abc/def?",
-#             "product" * 50,
-#             "abc&def",
-#             "<leading",
-#             "trailing>",
-#             "middle@dot",
-#             "_underscore",
-#             "abc*123",
-#             "abc%abc",
-#             "product()",
-#             "product+",
-#             "product;",
-#             "product'",
-#             "product|",
-#             "product[]",
-#             "product{}",
-#             "product=",
-#         ]
-
-#         for val in invalid_vals:
-#             payload = {
-#                 "name": "product",
-#                 "buy_price": "100",
-#                 "sell_price": "120",
-#                 "brand": val,
-#             }
-#             res = client.post("/api/products/", headers=headers, json=payload)
-#             json = res.get_json()
-
-#             assert res.status_code == 400
-#             assert json["code"] == 400
-#             assert json["status"] == "fail"
-#             assert "invalid" in json["errors"].lower()
-
-#     @pytest.mark.case("TC015")
-#     def test_create_product_invalid_model(self, client, create_user, login):
-#         """
-#         Test Case: TC015
-
-#         Description: Verify product can not be created with invalid model
-#         """
-
-#         # Admin account
-#         user = create_user()
-#         json = login(user.username, "TestPass123@")
-#         headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
-
-#         invalid_vals = [
-#             "ab",
-#             "abc",
-#             "a b",
-#             "abc##",
-#             "abc123!!",
-#             "abc/def?",
-#             "product" * 50,
-#             "abc&def",
-#             "<leading",
-#             "trailing>",
-#             "middle@dot",
-#             "_underscore",
-#             "abc*123",
-#             "abc%abc",
-#             "product()",
-#             "product+",
-#             "product;",
-#             "product'",
-#             "product|",
-#             "product[]",
-#             "product{}",
-#             "product=",
-#         ]
-
-#         for val in invalid_vals:
-#             payload = {
-#                 "name": "product",
-#                 "buy_price": "100",
-#                 "sell_price": "120",
-#                 "model": val,
-#             }
-#             res = client.post("/api/products/", headers=headers, json=payload)
-#             json = res.get_json()
-
-#             assert res.status_code == 400
-#             assert json["code"] == 400
-#             assert json["status"] == "fail"
-#             assert "invalid" in json["errors"].lower()
-
-#     @pytest.mark.case("TC016")
-#     def test_create_product_invalid_image(self, client, create_user, login):
-#         """
-#         Test Case: TC016
-
-#         Description: Verify product can not be created with invalid image
-#         """
-
-#         # Admin account
-#         user = create_user()
-#         json = login(user.username, "TestPass123@")
-#         headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
-
-#         invalid_vals = [
-#             ".jpg",
-#             "image",
-#             "image.bmp",
-#             "image.gif",
-#             "image.jpgg",
-#             "imagejpeg",
-#             "image.jpeg.png",
-#             "image..jpg",
-#             "im@ge.jpg",
-#             "im#ge.png",
-#             "image!.jpeg",
-#         ]
-
-#         for val in invalid_vals:
-#             payload = {
-#                 "name": "product",
-#                 "buy_price": "100",
-#                 "sell_price": "120",
-#                 "image": val,
-#             }
-#             res = client.post("/api/products/", headers=headers, json=payload)
-#             json = res.get_json()
-
-#             assert res.status_code == 400
-#             assert json["code"] == 400
-#             assert json["status"] == "fail"
-#             assert "invalid" in json["errors"].lower()
+@pytest.mark.PRODUCTS
+@pytest.mark.scenario("TS005")
+class TestTS005:
+    """
+    Module: PRODUCTS
+
+    Test Scenario: TS005
+
+    Description: Able to create product
+    """
+
+    @pytest.mark.case("TC001")
+    def test_create_product_without_login(self, client):
+        """
+        Test Case: TC001
+
+        Description: Verify product creation is not allowed without authentication
+        """
+        payload = {"name": "Product", "buy_price": "100", "sell_price": "110"}
+        res = client.post("/api/v1/products/", json=payload)
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 401
+
+    @pytest.mark.case("TC002")
+    def test_create_product_with_different_roles(self, client, create_user, login):
+        """
+        Test Case: TC002
+
+        Description: Verify with only manager, admin roles are allowed for product create
+        """
+        payload = {"name": "Product", "buy_price": "100", "sell_price": "110"}
+        user = create_user(username="usr1", role="guest")
+        access, _ = login(user.username)
+        headers = {"Authorization": f"Bearer {access}"}
+
+        res = client.post("/api/v1/products/", headers=headers, json=payload)
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 403
+
+        user = create_user(username="usr2", role="staff")
+        access, _ = login(user.username)
+        headers = {"Authorization": f"Bearer {access}"}
+
+        res = client.post("/api/v1/products/", headers=headers, json=payload)
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 403
+
+        user = create_user(username="usr3", role="manager")
+        access, _ = login(user.username)
+        headers = {"Authorization": f"Bearer {access}"}
+
+        res = client.post("/api/v1/products/", headers=headers, json=payload)
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 201
+
+        user = create_user(username="usr4", role="admin")
+        access, _ = login(user.username)
+        headers = {"Authorization": f"Bearer {access}"}
+
+        payload = {"name": "Product 2", "buy_price": "100", "sell_price": "110"}
+        res = client.post("/api/v1/products/", headers=headers, json=payload)
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 201
+
+    @pytest.mark.case("TC003")
+    def test_create_product_without_required_data(self, client, create_user, login):
+        """
+        Test Case: TC003
+
+        Description: Verify without mandatory data no one is able to create product
+        """
+        user = create_user(username="usr4", role="admin")
+        access, _ = login(user.username)
+        headers = {"Authorization": f"Bearer {access}"}
+
+        payload = {"name": "Product", "buy_price": "100", "sell_price": ""}
+        res = client.post("/api/v1/products/", headers=headers, json=payload)
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 422
+
+        payload = {"name": "Product", "sell_price": "110"}
+        res = client.post("/api/v1/products/", headers=headers, json=payload)
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 422
+
+        payload = {"buy_price": "100", "sell_price": ""}
+        res = client.post("/api/v1/products/", headers=headers, json=payload)
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 422
+
+    @pytest.mark.case("TC004")
+    def test_create_product_duplicate_name(self, client, create_user, login):
+        """
+        Test Case: TC004
+
+        Description: Verify product name must be unique
+        """
+        user = create_user(username="usr4", role="admin")
+        access, _ = login(user.username)
+        headers = {"Authorization": f"Bearer {access}"}
+
+        payload = {"name": "Product", "buy_price": "100", "sell_price": "120"}
+        res = client.post("/api/v1/products/", headers=headers, json=payload)
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 201
+
+        res = client.post("/api/v1/products/", headers=headers, json=payload)
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 409
+
+    @pytest.mark.case("TC005")
+    def test_create_product_invalid_name(self, client, create_user, login):
+        """
+        Test Case: TC005
+
+        Description: Verify product can not be created with invalid name
+        """
+
+        # Admin account
+        user = create_user()
+        access, _ = login(user.username)
+        headers = {"Authorization": f"Bearer {access}"}
+
+        invalid_vals = [
+            "ab",
+            "abc",
+            "a b",
+            "abc##",
+            "abc123!!",
+            "abc/def?",
+            "product" * 50,
+            "abc&def",
+            "<leading",
+            "trailing>",
+            "middle@dot",
+            "_underscore",
+            "abc*123",
+            "abc%abc",
+            "product()",
+            "product+",
+            "product;",
+            "product'",
+            "product|",
+            "product[]",
+            "product{}",
+            "product=",
+        ]
+
+        for val in invalid_vals:
+            payload = {"name": val, "buy_price": "100", "sell_price": "120"}
+            res = client.post("/api/v1/products/", headers=headers, json=payload)
+            print(f"{val}: {res.json()}")
+
+            assert res.status_code == 422
+
+    @pytest.mark.case("TC006")
+    def test_create_product_invalid_description(self, client, create_user, login):
+        """
+        Test Case: TC006
+
+        Description: Verify product can not be created with invalid description
+        """
+
+        # Admin account
+        user = create_user()
+        access, _ = login(user.username)
+        headers = {"Authorization": f"Bearer {access}"}
+
+        invalid_vals = [
+            "ab",
+            "abc",
+            "a b",
+            "abc##",
+            "abc123!!",
+            "abc/def?",
+            "product" * 50,
+            "abc&def",
+            "<leading",
+            "trailing>",
+            "middle@dot",
+            "_underscore",
+            "abc*123",
+            "abc%abc",
+            "product()",
+            "product+",
+            "product;",
+            "product'",
+            "product|",
+            "product[]",
+            "product{}",
+            "product=",
+        ]
+
+        for val in invalid_vals:
+            payload = {
+                "name": "product",
+                "buy_price": "100",
+                "sell_price": "120",
+                "description": val,
+            }
+            res = client.post("/api/v1/products/", headers=headers, json=payload)
+            print(f"{val}: {res.json()}")
+
+            assert res.status_code == 422
+
+    @pytest.mark.case("TC007")
+    def test_create_product_invalid_buy_price(self, client, create_user, login):
+        """
+        Test Case: TC007
+
+        Description: Verify product can not be created with invalid buy_price
+        """
+
+        # Admin account
+        user = create_user()
+        access, _ = login(user.username)
+        headers = {"Authorization": f"Bearer {access}"}
+
+        invalid_vals = [
+            "-",
+            "--12",
+            "12-",
+            "12.O",
+            "-.",
+            "abc",
+            "12a",
+            "1.2.3",
+            "+-12",
+            "12..3",
+            "1e10",
+            "--",
+            "-.5",
+        ]
+
+        for val in invalid_vals:
+            payload = {
+                "name": "product",
+                "buy_price": val,
+                "sell_price": "120",
+            }
+            res = client.post("/api/v1/products/", headers=headers, json=payload)
+            print(f"{val}: {res.json()}")
+
+            assert res.status_code == 422
+
+    @pytest.mark.case("TC008")
+    def test_create_product_invalid_sell_price(self, client, create_user, login):
+        """
+        Test Case: TC008
+
+        Description: Verify product can not be created with invalid sell_price
+        """
+
+        # Admin account
+        user = create_user()
+        access, _ = login(user.username)
+        headers = {"Authorization": f"Bearer {access}"}
+
+        invalid_vals = [
+            "-",
+            "--12",
+            "12-",
+            "12.O",
+            "-.",
+            "abc",
+            "12a",
+            "1.2.3",
+            "+-12",
+            "12..3",
+            "1e10",
+            "--",
+            "-.5",
+        ]
+
+        for val in invalid_vals:
+            payload = {
+                "name": "product",
+                "buy_price": "100",
+                "sell_price": val,
+            }
+            res = client.post("/api/v1/products/", headers=headers, json=payload)
+            print(f"{val}: {res.json()}")
+
+            assert res.status_code == 422
+
+    @pytest.mark.case("TC009")
+    def test_create_product_invalid_mrp(self, client, create_user, login):
+        """
+        Test Case: TC009
+
+        Description: Verify product can not be created with invalid mrp
+        """
+
+        # Admin account
+        user = create_user()
+        access, _ = login(user.username)
+        headers = {"Authorization": f"Bearer {access}"}
+
+        invalid_vals = [
+            "-",
+            "--12",
+            "12-",
+            "12.O",
+            "-.",
+            "abc",
+            "12a",
+            "1.2.3",
+            "+-12",
+            "12..3",
+            "1e10",
+            "--",
+            "-.5",
+        ]
+
+        for val in invalid_vals:
+            payload = {"name": "product", "buy_price": "100", "sell_price": "120", "mrp": val}
+            res = client.post("/api/v1/products/", headers=headers, json=payload)
+            print(f"{val}: {res.json()}")
+
+            assert res.status_code == 422
+
+    @pytest.mark.case("TC010")
+    def test_create_product_invalid_hsn_code(self, client, create_user, login):
+        """
+        Test Case: TC010
+
+        Description: Verify product can not be created with invalid hsn_code
+        """
+
+        # Admin account
+        user = create_user()
+        access, _ = login(user.username)
+        headers = {"Authorization": f"Bearer {access}"}
+
+        invalid_vals = [
+            "123",
+            "12345",
+            "1234567",
+            "123456789",
+            "abcd",
+            "12a456",
+            "20231",
+            "000",
+            "00000",
+            "20-01",
+            "2023 01",
+            "2023/01",
+            "999",
+            "1234567890",
+        ]
+
+        for val in invalid_vals:
+            payload = {"name": "product", "buy_price": "100", "sell_price": "120", "hsn_code": val}
+            res = client.post("/api/v1/products/", headers=headers, json=payload)
+            print(f"{val}: {res.json()}")
+
+            assert res.status_code == 422
+
+    @pytest.mark.case("TC011")
+    def test_create_product_invalid_gst(self, client, create_user, login):
+        """
+        Test Case: TC011
+
+        Description: Verify product can not be created with invalid gst
+        """
+
+        # Admin account
+        user = create_user()
+        access, _ = login(user.username)
+        headers = {"Authorization": f"Bearer {access}"}
+
+        invalid_vals = [
+            "-",
+            "--12",
+            "12-",
+            "12.O",
+            "-.",
+            "abc",
+            "12a",
+            "1.2.3",
+            "+-12",
+            "12..3",
+            "1e10",
+            "--",
+            "-.5",
+            "10%",
+            "50",
+        ]
+
+        for val in invalid_vals:
+            payload = {"name": "product", "buy_price": "100", "sell_price": "120", "gst": val}
+            res = client.post("/api/v1/products/", headers=headers, json=payload)
+            print(f"{val}: {res.json()}")
+
+            assert res.status_code == 422
+
+    @pytest.mark.case("TC012")
+    def test_create_product_invalid_quantity(self, client, create_user, login):
+        """
+        Test Case: TC012
+
+        Description: Verify product can not be created with invalid quantity
+        """
+
+        # Admin account
+        user = create_user()
+        access, _ = login(user.username)
+        headers = {"Authorization": f"Bearer {access}"}
+
+        invalid_vals = [
+            "-",
+            "--12",
+            "12-",
+            "12.",
+            "-.",
+            "abc",
+            "12a",
+            "1.2.3",
+            "+-12",
+            "12..3",
+            "1e10",
+            "--",
+            "-.5",
+            "10%",
+        ]
+
+        for val in invalid_vals:
+            payload = {"name": "product", "buy_price": "100", "sell_price": "120", "quantity": val}
+            res = client.post("/api/v1/products/", headers=headers, json=payload)
+            print(f"{val}: {res.json()}")
+
+            assert res.status_code == 422
+
+    @pytest.mark.case("TC013")
+    def test_create_product_invalid_unit(self, client, create_user, login):
+        """
+        Test Case: TC013
+
+        Description: Verify product can not be created with invalid unit
+        """
+
+        # Admin account
+        user = create_user()
+        access, _ = login(user.username)
+        headers = {"Authorization": f"Bearer {access}"}
+
+        invalid_vals = [
+            "pc",
+            "kgs",
+            "grams",
+            "litre",
+            "liter",
+            "ltr.",
+            "mls",
+            "boxes",
+            "packet",
+            "sets",
+            "doz",
+            "dozens",
+            "PCS",
+            "Kg",
+            "123",
+            "box1",
+        ]
+
+        for val in invalid_vals:
+            payload = {"name": "product", "buy_price": "100", "sell_price": "120", "unit": val}
+            res = client.post("/api/v1/products/", headers=headers, json=payload)
+            print(f"{val}: {res.json()}")
+
+            assert res.status_code == 422
+
+    @pytest.mark.case("TC014")
+    def test_create_product_invalid_brand(self, client, create_user, login):
+        """
+        Test Case: TC014
+
+        Description: Verify product can not be created with invalid brand
+        """
+
+        # Admin account
+        user = create_user()
+        access, _ = login(user.username)
+        headers = {"Authorization": f"Bearer {access}"}
+
+        invalid_vals = [
+            "ab",
+            "abc",
+            "a b",
+            "abc##",
+            "abc123!!",
+            "abc/def?",
+            "product" * 50,
+            "abc&def",
+            "<leading",
+            "trailing>",
+            "middle@dot",
+            "_underscore",
+            "abc*123",
+            "abc%abc",
+            "product()",
+            "product+",
+            "product;",
+            "product'",
+            "product|",
+            "product[]",
+            "product{}",
+            "product=",
+        ]
+
+        for val in invalid_vals:
+            payload = {
+                "name": "product",
+                "buy_price": "100",
+                "sell_price": "120",
+                "brand": val,
+            }
+            res = client.post("/api/v1/products/", headers=headers, json=payload)
+            print(f"{val}: {res.json()}")
+
+            assert res.status_code == 422
+
+    @pytest.mark.case("TC015")
+    def test_create_product_invalid_model(self, client, create_user, login):
+        """
+        Test Case: TC015
+
+        Description: Verify product can not be created with invalid model
+        """
+
+        # Admin account
+        user = create_user()
+        access, _ = login(user.username)
+        headers = {"Authorization": f"Bearer {access}"}
+
+        invalid_vals = [
+            "ab",
+            "abc",
+            "a b",
+            "abc##",
+            "abc123!!",
+            "abc/def?",
+            "product" * 50,
+            "abc&def",
+            "<leading",
+            "trailing>",
+            "middle@dot",
+            "_underscore",
+            "abc*123",
+            "abc%abc",
+            "product()",
+            "product+",
+            "product;",
+            "product'",
+            "product|",
+            "product[]",
+            "product{}",
+            "product=",
+        ]
+
+        for val in invalid_vals:
+            payload = {
+                "name": "product",
+                "buy_price": "100",
+                "sell_price": "120",
+                "model": val,
+            }
+            res = client.post("/api/v1/products/", headers=headers, json=payload)
+            print(f"{val}: {res.json()}")
+
+            assert res.status_code == 422
+
+    @pytest.mark.case("TC016")
+    def test_create_product_invalid_image(self, client, create_user, login):
+        """
+        Test Case: TC016
+
+        Description: Verify product can not be created with invalid image
+        """
+
+        # Admin account
+        user = create_user()
+        access, _ = login(user.username)
+        headers = {"Authorization": f"Bearer {access}"}
+
+        invalid_vals = [
+            ".jpg",
+            "image",
+            "image.bmp",
+            "image.gif",
+            "image.jpgg",
+            "imagejpeg",
+            "image.jpeg.png",
+            "image..jpg",
+            "im@ge.jpg",
+            "im#ge.png",
+            "image!.jpeg",
+        ]
+
+        for val in invalid_vals:
+            payload = {
+                "name": "product",
+                "buy_price": "100",
+                "sell_price": "120",
+                "image": val,
+            }
+            res = client.post("/api/v1/products/", headers=headers, json=payload)
+            print(f"{val}: {res.json()}")
+
+            assert res.status_code == 422
 
 
 # @pytest.mark.PRODUCTS
@@ -1344,7 +1293,7 @@ class TestTS004:
 #         """
 #         create_product(name="product")
 #         payload = {"name": "Product", "buy_price": "100", "sell_price": "110"}
-#         res = client.put("/api/products/1", json=payload)
+#         res = client.put("/api/v1/products/1", json=payload)
 #         json = res.get_json()
 
 #         assert res.status_code == 401
@@ -1365,7 +1314,7 @@ class TestTS004:
 #         json = login(guest.username, "TestPass123@")
 #         headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
 
-#         res = client.put("/api/products/1", headers=headers, json=payload)
+#         res = client.put("/api/v1/products/1", headers=headers, json=payload)
 #         json = res.get_json()
 
 #         assert res.status_code == 403
@@ -1377,7 +1326,7 @@ class TestTS004:
 #         json = login(staff.username, "TestPass123@")
 #         headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
 
-#         res = client.put("/api/products/1", headers=headers, json=payload)
+#         res = client.put("/api/v1/products/1", headers=headers, json=payload)
 #         json = res.get_json()
 
 #         assert res.status_code == 403
@@ -1388,7 +1337,7 @@ class TestTS004:
 #         json = login(manager.username, "TestPass123@")
 #         headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
 
-#         res = client.put("/api/products/1", headers=headers, json=payload)
+#         res = client.put("/api/v1/products/1", headers=headers, json=payload)
 #         json = res.get_json()
 
 #         assert res.status_code == 200
@@ -1401,7 +1350,7 @@ class TestTS004:
 #         headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
 
 #         payload = {"buy_price": "500", "sell_price": "600"}
-#         res = client.put("/api/products/1", headers=headers, json=payload)
+#         res = client.put("/api/v1/products/1", headers=headers, json=payload)
 #         json = res.get_json()
 
 #         assert res.status_code == 200
@@ -1424,7 +1373,7 @@ class TestTS004:
 #         headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
 
 #         payload = {"buy_price": "500", "sell_price": "600"}
-#         res = client.put("/api/products/2", headers=headers, json=payload)
+#         res = client.put("/api/v1/products/2", headers=headers, json=payload)
 #         json = res.get_json()
 
 #         assert res.status_code == 404
@@ -1447,7 +1396,7 @@ class TestTS004:
 #         create_product("Product 2")
 
 #         payload = {"name": "Product 2", "buy_price": "100", "sell_price": "120"}
-#         res = client.put("/api/products/1", headers=headers, json=payload)
+#         res = client.put("/api/v1/products/1", headers=headers, json=payload)
 #         json = res.get_json()
 
 #         assert res.status_code == 409
@@ -1470,7 +1419,7 @@ class TestTS004:
 
 #         create_product("product")
 #         payload = {"quantity": "--100"}
-#         res = client.put("/api/products/1", headers=headers, json=payload)
+#         res = client.put("/api/v1/products/1", headers=headers, json=payload)
 #         json = res.get_json()
 
 #         assert res.status_code == 400
@@ -1498,7 +1447,7 @@ class TestTS004:
 #         Description: Verify without valid login credential no able to delete products api
 #         """
 #         create_product(name="product")
-#         res = client.delete("/api/products/1")
+#         res = client.delete("/api/v1/products/1")
 #         json = res.get_json()
 
 #         assert res.status_code == 401
@@ -1518,7 +1467,7 @@ class TestTS004:
 #         json = login(guest.username, "TestPass123@")
 #         headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
 
-#         res = client.delete("/api/products/1", headers=headers)
+#         res = client.delete("/api/v1/products/1", headers=headers)
 #         json = res.get_json()
 
 #         assert res.status_code == 403
@@ -1530,7 +1479,7 @@ class TestTS004:
 #         json = login(staff.username, "TestPass123@")
 #         headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
 
-#         res = client.delete("/api/products/1", headers=headers)
+#         res = client.delete("/api/v1/products/1", headers=headers)
 #         json = res.get_json()
 
 #         assert res.status_code == 403
@@ -1541,7 +1490,7 @@ class TestTS004:
 #         json = login(manager.username, "TestPass123@")
 #         headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
 
-#         res = client.delete("/api/products/1", headers=headers)
+#         res = client.delete("/api/v1/products/1", headers=headers)
 #         json = res.get_json()
 
 #         assert res.status_code == 403
@@ -1552,7 +1501,7 @@ class TestTS004:
 #         json = login(admin.username, "TestPass123@")
 #         headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
 
-#         res = client.delete("/api/products/1", headers=headers)
+#         res = client.delete("/api/v1/products/1", headers=headers)
 #         json = res.get_json()
 
 #         assert res.status_code == 200
@@ -1572,7 +1521,7 @@ class TestTS004:
 #         json = login(admin.username, "TestPass123@")
 #         headers = {"Authorization": f"Bearer {json["data"]["access_token"]}"}
 
-#         res = client.put("/api/products/2", headers=headers)
+#         res = client.put("/api/v1/products/2", headers=headers)
 #         json = res.get_json()
 
 #         assert res.status_code == 404
