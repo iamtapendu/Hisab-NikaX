@@ -55,6 +55,20 @@ def get_users(
     db: Annotated[Session, Depends(get_db)],
     page: Annotated[int, Query(ge=1)] = 1,
     per_page: Annotated[int, Query(ge=1, le=100)] = 50,
+    order_by: Annotated[
+        str,
+        Query(
+            description="Column to sort by",
+            pattern="^(username|name|email|phone|role|last_updated)$",
+        ),
+    ] = "last_updated",
+    order_dir: Annotated[
+        str,
+        Query(
+            description="Sort direction",
+            pattern="^(asc|desc)$",
+        ),
+    ] = "desc",
 ):
     """
     Retrieve a paginated list of all users.
@@ -67,7 +81,7 @@ def get_users(
     --------------
     - **Admin**: Can fetch records of all users
     """
-    data, meta = user_service.get_users(db, page, per_page)
+    data, meta = user_service.get_users(db, page, per_page, order_by, order_dir)
     return {
         "data": data,
         "meta": meta,

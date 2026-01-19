@@ -1,7 +1,7 @@
 from typing import Tuple, Sequence
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session
-from sqlalchemy import select, func
+from sqlalchemy import select, asc, desc, func
 from fastapi import HTTPException, status
 
 from core.security import hash_password, verify_password
@@ -9,13 +9,26 @@ from core.validators import Pattern, validate_map
 from .model import User
 from .schema import UserCreate, UserUpdate, UserPasswordUpdate
 
+SORTABLE_COLUMNS = {
+    "username": User.username,
+    "name": User.name,
+    "phone": User.phone,
+    "email": User.email,
+    "role": User.role,
+    "last_updated": User.last_updated,
+}
 
-def get_users(db: Session, page: int, per_page: int) -> Tuple[Sequence[User], dict[str, int]]:
+
+def get_users(
+    db: Session, page: int, per_page: int, order_by: str, order_dir: str
+) -> Tuple[Sequence[User], dict[str, int]]:
     """
     Service for getting paginated users
     """
+    order_by_col = SORTABLE_COLUMNS.get(order_by, User.last_updated)
+    order_stmt = asc(order_by_col) if order_dir == "asc" else desc(order_by_col)
 
-    stmt = select(User).order_by(User.last_updated).offset((page - 1) * per_page).limit(per_page)
+    stmt = select(User).order_by(order_stmt).offset((page - 1) * per_page).limit(per_page)
     users = db.execute(stmt).scalars().all()
 
     total = db.execute(select(func.count()).select_from(User)).scalar()

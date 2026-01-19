@@ -1,7 +1,7 @@
 from typing import Tuple, Sequence
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session
-from sqlalchemy import select, func, or_, and_
+from sqlalchemy import select, func, asc, desc, or_, and_
 from fastapi import HTTPException, status
 
 from core.validators import Pattern, validate_map
@@ -9,14 +9,27 @@ from .model import Product
 from .schema import ProductBase, ProductUpdate
 
 
-def get_products(db: Session, page: int, per_page: int) -> Tuple[Sequence[Product], dict[str, int]]:
+SORTABLE_COLUMNS = {
+    "name": Product.name,
+    "buy_price": Product.buy_price,
+    "sell_price": Product.sell_price,
+    "mrp": Product.mrp,
+    "quantity": Product.quantity,
+    "brand": Product.brand,
+    "last_updated": Product.last_updated,
+}
+
+
+def get_products(
+    db: Session, page: int, per_page: int, order_by: str, order_dir: str
+) -> Tuple[Sequence[Product], dict[str, int]]:
     """
     Service for getting paginated products
     """
+    order_by_col = SORTABLE_COLUMNS.get(order_by, Product.last_updated)
+    order_stmt = asc(order_by_col) if order_dir == "asc" else desc(order_by_col)
 
-    stmt = (
-        select(Product).order_by(Product.last_updated).offset((page - 1) * per_page).limit(per_page)
-    )
+    stmt = select(Product).order_by(order_stmt).offset((page - 1) * per_page).limit(per_page)
     products = db.execute(stmt).scalars().all()
 
     total = db.execute(select(func.count()).select_from(Product)).scalar()
@@ -60,6 +73,8 @@ def search_products(
     in_stock: bool | None = None,
     brand: str | None = None,
     unit: str | None = None,
+    order_by: str,
+    order_dir: str,
 ) -> Tuple[Sequence[Product], dict[str, int]]:
     """
     Service for searching product using specific keywords
@@ -100,9 +115,14 @@ def search_products(
     if conditions:
         stmt = stmt.where(and_(*conditions))
 
-    total = db.execute(select(func.count()).select_from(stmt.subquery())).scalar_one()
+    total = db.execute(
+        select(func.count()).select_from(stmt.order_by(None).subquery())
+    ).scalar_one()
 
-    stmt = stmt.order_by(Product.last_updated.desc()).offset((page - 1) * per_page).limit(per_page)
+    order_by_col = SORTABLE_COLUMNS.get(order_by, Product.last_updated)
+    order_stmt = asc(order_by_col) if order_dir == "asc" else desc(order_by_col)
+
+    stmt = stmt.order_by(order_stmt).offset((page - 1) * per_page).limit(per_page)
     products = db.execute(stmt).scalars().all()
 
     pages = (total + per_page - 1) // per_page if total else 0

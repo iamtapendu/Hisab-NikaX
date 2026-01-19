@@ -27,6 +27,20 @@ def get_products(
     db: Annotated[Session, Depends(get_db)],
     page: Annotated[int, Query(ge=1)] = 1,
     per_page: Annotated[int, Query(ge=1, le=100)] = 50,
+    order_by: Annotated[
+        str,
+        Query(
+            description="Column to sort by",
+            pattern="^(name|buy_price|sell_price|mrp|quantity|brand|last_updated)$",
+        ),
+    ] = "last_updated",
+    order_dir: Annotated[
+        str,
+        Query(
+            description="Sort direction",
+            pattern="^(asc|desc)$",
+        ),
+    ] = "desc",
 ):
     """
     Retrieve a paginated list of all products.
@@ -42,7 +56,7 @@ def get_products(
     - **Staff**: Can fetch all the product data
     """
 
-    data, meta = product_service.get_products(db, page, per_page)
+    data, meta = product_service.get_products(db, page, per_page, order_by, order_dir)
     return {
         "data": data,
         "meta": meta,
@@ -87,6 +101,20 @@ def search_products(
             description="Unit of measurement",
         ),
     ] = None,
+    order_by: Annotated[
+        str,
+        Query(
+            description="Column to sort by",
+            pattern="^(name|buy_price|sell_price|mrp|quantity|brand|last_updated)$",
+        ),
+    ] = "last_updated",
+    order_dir: Annotated[
+        str,
+        Query(
+            description="Sort direction",
+            pattern="^(asc|desc)$",
+        ),
+    ] = "desc",
 ):
     """
     Search products using free-text keywords and structured filters.
@@ -113,6 +141,8 @@ def search_products(
         in_stock=in_stock,
         brand=brand,
         unit=unit,
+        order_by=order_by,
+        order_dir=order_dir,
     )
 
     return {
