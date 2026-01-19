@@ -72,8 +72,12 @@ def search_products(
     ] = None,
     page: Annotated[int, Query(ge=1, description="Page number")] = 1,
     per_page: Annotated[int, Query(ge=1, le=100, description="Items per page")] = 50,
-    min_price: Annotated[float | None, Query(ge=0,le=999999, description="Minimum selling price")] = None,
-    max_price: Annotated[float | None, Query(ge=0,le=999999, description="Maximum selling price")] = None,
+    min_price: Annotated[
+        float | None, Query(ge=0, le=999999, description="Minimum selling price")
+    ] = None,
+    max_price: Annotated[
+        float | None, Query(ge=0, le=999999, description="Maximum selling price")
+    ] = None,
     in_stock: Annotated[bool | None, Query(description="Only products in stock")] = None,
     brand: Annotated[str | None, Query(max_length=50, description="Brand name")] = None,
     unit: Annotated[

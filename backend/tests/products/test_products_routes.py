@@ -1442,7 +1442,7 @@ class TestTS007:
         Description: Verify with only admin are allowed for delete product api
         """
         create_product(name="product")
-        
+
         user = create_user(username="guest", role="guest")
         access, _ = login(user.username)
         headers = {"Authorization": f"Bearer {access}"}
