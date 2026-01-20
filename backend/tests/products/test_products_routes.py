@@ -268,6 +268,101 @@ class TestTS002:
         print(body)
         assert res.status_code == 401
 
+    @pytest.mark.case("TC006")
+    def test_sorting_working_correctly(self, client, create_user, login, create_product):
+        """
+        Test Case: TC006
+
+        Description: Verify sorting is working as expected
+        """
+
+        # Arrange
+        user = create_user(role="admin")
+        access, _ = login(user.username)
+        headers = {"Authorization": f"Bearer {access}"}
+
+        # Create multiple products
+        for i in range(1, 11):
+            create_product(
+                name=f"Product {i}", brand="PaginationTest", sell_price=100 + i, quantity=50 - i
+            )
+
+        # Act: default order
+        res = client.get("/api/v1/products/?page=1&per_page=10", headers=headers)
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 200
+        assert body["data"][0]["name"] == "Product 10"
+        assert body["data"][0]["sell_price"] == 110
+        assert len(body["data"]) == 10
+
+        # Act: deafult desecding order
+        res = client.get("/api/v1/products/?order_by=quantity&page=1&per_page=10", headers=headers)
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 200
+        assert body["data"][0]["name"] == "Product 1"
+        assert body["data"][0]["quantity"] == 49
+        assert len(body["data"]) == 10
+
+        # Act: ascending order
+        res = client.get(
+            "/api/v1/products/?order_by=quantity&order_dir=asc&page=1&per_page=10",
+            headers=headers,
+        )
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 200
+        assert body["data"][0]["name"] == "Product 10"
+        assert body["data"][0]["quantity"] == 40
+        assert len(body["data"]) == 10
+
+    @pytest.mark.case("TC007")
+    def test_sorting_with_invalid_data(self, client, create_user, login, create_product):
+        """
+        Test Case: TC007
+
+        Description: Verify sorting not working with invalid order_by and order_dir value
+        """
+
+        # Arrange
+        user = create_user(role="admin")
+        access, _ = login(user.username)
+        headers = {"Authorization": f"Bearer {access}"}
+
+        # Create multiple products
+        for i in range(1, 11):
+            create_product(
+                name=f"Product {i}", brand="PaginationTest", sell_price=100 + i, quantity=50 - i
+            )
+
+        # Act: invalid per_page
+        res = client.get("/api/v1/products?page=1&per_page=101", headers=headers)
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 422
+
+        # Act: invalid order_by
+        res = client.get("/api/v1/products?order_by=invalid&page=1&per_page=10", headers=headers)
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 422
+
+        # Act: invalid order direction
+        res = client.get(
+            "/api/v1/products?order_by=quantity&order_dir=ascending&page=1&per_page=10",
+            headers=headers,
+        )
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 422
+
 
 @pytest.mark.PRODUCTS
 @pytest.mark.scenario("TS003")
@@ -638,6 +733,105 @@ class TestTS004:
         assert body["meta"]["per_page"] == 10
         assert body["meta"]["total"] == 0
         assert body["meta"]["pages"] == 0
+
+    @pytest.mark.case("TC007")
+    def test_search_sorting_working_correctly(self, client, create_user, login, create_product):
+        """
+        Test Case: TC007
+
+        Description: Verify sorting is working as expected
+        """
+
+        # Arrange
+        user = create_user(role="admin")
+        access, _ = login(user.username)
+        headers = {"Authorization": f"Bearer {access}"}
+
+        # Create multiple products
+        for i in range(1, 11):
+            create_product(
+                name=f"Product {i}", brand="PaginationTest", sell_price=100 + i, quantity=50 - i
+            )
+
+        # Act: default order
+        res = client.get("/api/v1/products/search?page=1&per_page=10", headers=headers)
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 200
+        assert body["data"][0]["name"] == "Product 10"
+        assert body["data"][0]["sell_price"] == 110
+        assert len(body["data"]) == 10
+
+        # Act: deafult desecding order
+        res = client.get(
+            "/api/v1/products/search?order_by=quantity&page=1&per_page=10", headers=headers
+        )
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 200
+        assert body["data"][0]["name"] == "Product 1"
+        assert body["data"][0]["quantity"] == 49
+        assert len(body["data"]) == 10
+
+        # Act: ascending order
+        res = client.get(
+            "/api/v1/products/search?order_by=quantity&order_dir=asc&page=1&per_page=10",
+            headers=headers,
+        )
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 200
+        assert body["data"][0]["name"] == "Product 10"
+        assert body["data"][0]["quantity"] == 40
+        assert len(body["data"]) == 10
+
+    @pytest.mark.case("TC008")
+    def test_search_sorting_with_invalid_data(self, client, create_user, login, create_product):
+        """
+        Test Case: TC008
+
+        Description: Verify sorting not working with invalid order_by and order_dir value
+        """
+
+        # Arrange
+        user = create_user(role="admin")
+        access, _ = login(user.username)
+        headers = {"Authorization": f"Bearer {access}"}
+
+        # Create multiple products
+        for i in range(1, 11):
+            create_product(
+                name=f"Product {i}", brand="PaginationTest", sell_price=100 + i, quantity=50 - i
+            )
+
+        # Act: invalid per_page
+        res = client.get("/api/v1/products/search?page=1&per_page=101", headers=headers)
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 422
+
+        # Act: invalid order_by
+        res = client.get(
+            "/api/v1/products/search?order_by=invalid&page=1&per_page=10", headers=headers
+        )
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 422
+
+        # Act: invalid order direction
+        res = client.get(
+            "/api/v1/products/search?order_by=quantity&order_dir=ascending&page=1&per_page=10",
+            headers=headers,
+        )
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 422
 
 
 @pytest.mark.PRODUCTS

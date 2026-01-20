@@ -26,7 +26,7 @@ def get_products(
     """
     Service for getting paginated products
     """
-    order_by_col = SORTABLE_COLUMNS.get(order_by, Product.last_updated)
+    order_by_col = func.lower(SORTABLE_COLUMNS.get(order_by, Product.last_updated))
     order_stmt = asc(order_by_col) if order_dir == "asc" else desc(order_by_col)
 
     stmt = select(Product).order_by(order_stmt).offset((page - 1) * per_page).limit(per_page)
@@ -119,7 +119,7 @@ def search_products(
         select(func.count()).select_from(stmt.order_by(None).subquery())
     ).scalar_one()
 
-    order_by_col = SORTABLE_COLUMNS.get(order_by, Product.last_updated)
+    order_by_col = func.lower(SORTABLE_COLUMNS.get(order_by, Product.last_updated))
     order_stmt = asc(order_by_col) if order_dir == "asc" else desc(order_by_col)
 
     stmt = stmt.order_by(order_stmt).offset((page - 1) * per_page).limit(per_page)

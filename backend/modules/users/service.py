@@ -25,7 +25,7 @@ def get_users(
     """
     Service for getting paginated users
     """
-    order_by_col = SORTABLE_COLUMNS.get(order_by, User.last_updated)
+    order_by_col = func.lower(SORTABLE_COLUMNS.get(order_by, User.last_updated))
     order_stmt = asc(order_by_col) if order_dir == "asc" else desc(order_by_col)
 
     stmt = select(User).order_by(order_stmt).offset((page - 1) * per_page).limit(per_page)

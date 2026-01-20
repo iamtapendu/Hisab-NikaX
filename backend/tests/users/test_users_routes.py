@@ -207,7 +207,7 @@ class TestTS003:
 
         assert res.status_code == 200
         assert len(body["data"]) == 3
-        assert body["data"][0]["username"] == "User_6"
+        assert body["data"][0]["username"] == "User_8"
 
         user = create_user(username="User002", role="manager")
         access, _ = login(user.username)
@@ -249,7 +249,7 @@ class TestTS003:
 
         assert res.status_code == 200
         assert len(body["data"]) == 3
-        assert body["data"][0]["username"] == "User_6"
+        assert body["data"][0]["username"] == "User_8"
         assert body["meta"]["page"] == 3
         assert body["meta"]["per_page"] == 3
         assert body["meta"]["pages"] == 5
@@ -268,6 +268,94 @@ class TestTS003:
         print(body)
 
         assert res.status_code == 401
+
+    @pytest.mark.case("TC004")
+    def test_sorting_working_correctly(self, client, create_user, login):
+        """
+        Test Case: TC004
+
+        Description: Verify sorting is working as expected
+        """
+
+        # Arrange
+        user = create_user(role="admin")
+        access, _ = login(user.username)
+        headers = {"Authorization": f"Bearer {access}"}
+
+        # Create multiple users
+        for i in range(1, 10):
+            create_user(username=f"User_{i}")
+
+        # Act: default order
+        res = client.get("/api/v1/users/?page=1&per_page=10", headers=headers)
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 200
+        assert body["data"][0]["username"] == "User_9"
+        assert len(body["data"]) == 10
+
+        # Act: deafult desecding order
+        res = client.get("/api/v1/users/?order_by=username&page=1&per_page=10", headers=headers)
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 200
+        assert body["data"][0]["username"] == "User_9"
+        assert len(body["data"]) == 10
+
+        # Act: ascending order
+        res = client.get(
+            "/api/v1/users/?order_by=username&order_dir=asc&page=1&per_page=10",
+            headers=headers,
+        )
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 200
+        assert body["data"][0]["username"] == "admin"
+        assert len(body["data"]) == 10
+
+    @pytest.mark.case("TC007")
+    def test_sorting_with_invalid_data(self, client, create_user, login):
+        """
+        Test Case: TC007
+
+        Description: Verify sorting not working with invalid order_by and order_dir value
+        """
+
+        # Arrange
+        user = create_user(role="admin")
+        access, _ = login(user.username)
+        headers = {"Authorization": f"Bearer {access}"}
+
+        # Create multiple users
+        for i in range(1, 11):
+            create_user(username=f"User_{i}")
+
+        # Act: invalid per_page
+        res = client.get("/api/v1/users?page=1&per_page=101", headers=headers)
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 422
+
+        # Act: invalid order_by
+        res = client.get("/api/v1/users?order_by=invalid&page=1&per_page=10", headers=headers)
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 422
+
+        # Act: invalid order direction
+        res = client.get(
+            "/api/v1/users?order_by=username&order_dir=ascending&page=1&per_page=10",
+            headers=headers,
+        )
+        body = res.json()
+        print(body)
+
+        assert res.status_code == 422
 
 
 @pytest.mark.USERS
