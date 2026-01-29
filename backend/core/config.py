@@ -61,7 +61,7 @@ class Settings(BaseSettings):
 
     # CORS
     CORS_ORIGINS: list[str] = [
-        "http://localhost:3000",
+        "http://192.168.1.15:5173",
         "http://localhost:5173",
     ]
 
