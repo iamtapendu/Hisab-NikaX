@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/app/providers/auth-context";
 import { useState } from "react";
 import Modal from "@/components/Modal";
+import Spinner from "@/components/Spinner";
 
 
 export default function Login() {
@@ -48,6 +49,7 @@ export default function Login() {
         <InputWithPopup name="password" type="password" placeholder="Password" register={register} error={errors.password} />
         <button type="submit" className="btn btn-primary md:col-span-2 m-1" disabled={isSubmitting}>
           {isSubmitting ? "Signing in..." : "Sign in"}
+          {isSubmitting && <Spinner/>}
         </button>
       </form>
       <Modal
