@@ -2,6 +2,8 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 import AuthLayout from "./layouts/AuthLayout";
 import Login from "../pages/Login";
 import PublicRoute from "./layouts/PublicRoute";
+import ProtectedRoute from "./layouts/ProtectedRoute";
+import HomeLayout from "./layouts/HomeLayout";
 
 export const router = createBrowserRouter([
     {
@@ -22,9 +24,9 @@ export const router = createBrowserRouter([
     {
         path: "/home",
         element: (
-            <PublicRoute>
-                <h1>Hello</h1>
-            </PublicRoute>
+            // <ProtectedRoute>
+                <HomeLayout />
+            // </ProtectedRoute>
         ),
     },
 ]);

@@ -67,8 +67,11 @@
 }
 
 @layer components {
+  * {
+    @apply border-0 m-0;
+  }
   .input {
-      @apply bg-background text-foreground rounded-md border-secondary hover:border-primary 
+    @apply bg-background text-foreground rounded-md border-secondary hover:border-primary 
       focus:outline-none focus:ring-1 focus:ring-primary;
   }
 }
@@ -109,4 +112,3 @@
     hover:bg-danger-hv;
   }
 }
-
