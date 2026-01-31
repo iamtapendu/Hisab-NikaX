@@ -17,14 +17,14 @@
   --foreground: 240 10% 3.9%;
   --primary: 192 91% 36%;
   --primary-hv: 193 82% 31%;
-  --secondary: 185 96% 90%;
-  --secondary-hv: 186 94% 82%;
+  --secondary: 187 92% 69%;
+  --secondary-hv: 188 86% 53%;
   --tertiary: 192 91% 36%;
-  --tertiary-hv: 185 96% 90%;
+  --tertiary-hv: 186 94% 82%;
   --muted: 186 94% 82%;
   /* --accent: 185 95.9% 90.4%; */
   --danger: 0 84.2% 60.2%;
-  --danger-hv: 0 72% 51%;
+  --danger-hv: 0 72% 40%;
   --success: 142 76% 36%;
   --success-hv: 142 72% 29%;
 
@@ -35,16 +35,16 @@
 .dark {
   --background: 255 0% 14%;
   --foreground: 210 40% 98%;
-  --primary: 255 92% 76%;
-  --primary-hv: 252 95% 85%;
-  --secondary: 263 69% 42%;
-  --secondary-hv: 263 70% 50%;
-  --tertiary: 255 92% 76%;
-  --tertiary-hv: 261 73% 23%;
+  --primary: 189 94% 43%;
+  --primary-hv: 192 91% 36%;
+  --secondary: 193 82% 31%;
+  --secondary-hv: 192 91% 36%;
+  --tertiary: 189 94% 43%;
+  --tertiary-hv: 196 64% 24%;
   --muted: 186 94% 82%;
   /* --accent: 185 95.9% 90.4%; */
   --danger: 0 84.2% 60.2%;
-  --danger-hv: 0 72% 51%;
+  --danger-hv: 0 72% 40%;
   --success: 142 76% 36%;
   --success-hv: 142 72% 29%;
 }
@@ -52,16 +52,16 @@
 .warm {
   --background: 33 100% 96%;
   --foreground: 0 10% 3.9%;
-  --primary: 21 90% 48%;
-  --primary-hv: 17 88% 40%;
-  --secondary: 32 98% 83%;
-  --secondary-hv: 31 97% 72%;
-  --tertiary: 21 90% 48%;
-  --tertiary-hv: 34 100% 92%;
+  --primary: 17 88% 40%;
+  --primary-hv: 15 79% 34%;
+  --secondary: 31 97% 72%;
+  --secondary-hv: 27 96% 61%;
+  --tertiary: 17 88% 40%;
+  --tertiary-hv: 32 98% 83%;
   --muted: 21 90% 48%;
   /* --accent: 185 95.9% 90.4%; */
   --danger: 0 84.2% 60.2%;
-  --danger-hv: 0 72% 51%;
+  --danger-hv: 0 72% 40%;
   --success: 142 76% 36%;
   --success-hv: 142 72% 29%;
 }
