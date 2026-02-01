@@ -4,7 +4,7 @@
 
 @layer base {
   * {
-    @apply border border-background;
+    @apply border-0 m-0 border-background;
   }
 
   body {
@@ -67,9 +67,7 @@
 }
 
 @layer components {
-  * {
-    @apply border-0 m-0;
-  }
+  
   .input {
     @apply bg-background text-foreground rounded-md border border-secondary hover:border-primary 
       focus:outline-none focus:ring-1 focus:ring-primary;
