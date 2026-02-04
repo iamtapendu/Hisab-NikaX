@@ -1,3 +1,5 @@
+import { memo } from "react";
+
 const MENU_ITEMS = [
     "Dashboard",
     "Customers",
@@ -11,7 +13,7 @@ const MENU_ITEMS = [
     "Users",
 ]
 
-export default function SideNavbar({ isOpen, onToggle }) {
+const SideNavbar = memo(function SideNavbar({ isOpen, onToggle }) {
 
     return (
         <aside
@@ -19,7 +21,7 @@ export default function SideNavbar({ isOpen, onToggle }) {
                     ${isOpen ? "w-56" : "w-0"} group`}
         >
             <nav className={`flex flex-col items-center h-full overflow-hidden
-                        ${isOpen ? "opacity-100" : "opacity-0"}
+                        ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}
                         transition-opacity duration-200`}
             >
 
@@ -53,4 +55,6 @@ export default function SideNavbar({ isOpen, onToggle }) {
             </div>
         </aside>
     );
-}
+});
+
+export default SideNavbar;
