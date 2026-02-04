@@ -3,7 +3,8 @@ import AuthLayout from "./layouts/AuthLayout";
 import Login from "../pages/Login";
 import PublicRoute from "./layouts/PublicRoute";
 import ProtectedRoute from "./layouts/ProtectedRoute";
-import HomeLayout from "./layouts/HomeLayout";
+import BaseLayout from "./layouts/BaseLayout";
+import App from "@/App";
 
 export const router = createBrowserRouter([
     {
@@ -24,8 +25,26 @@ export const router = createBrowserRouter([
     {
         path: "/home",
         element: (
+            <ProtectedRoute>
+                <BaseLayout />
+            </ProtectedRoute>
+        ),
+    },
+    {
+        element: (
+            <ProtectedRoute>
+                <BaseLayout/>
+            </ProtectedRoute>
+        ),
+         children: [
+            { path: "/profile", element: <p>HELLO</p> },
+        ],
+    },
+    {
+        path: "/app",
+        element: (
             // <ProtectedRoute>
-                <HomeLayout />
+            <App />
             // </ProtectedRoute>
         ),
     },
