@@ -1,14 +1,15 @@
 import { useNavigate } from "react-router-dom"
+import { memo } from "react";
 import UserMenu from '@/components/UserMenu'
 
-export default function Headbar() {
-    let navigate = useNavigate();
-
+const Headbar = memo(function Headbar() {
+    const navigate = useNavigate();
+    const handleHomeClick = () => navigate("/home");
     return (
         <header className="col-span-2 bg-primary-hv h-12 flex items-center px-4 shadow-md z-50">
             <div className="flex justify-between items-center w-full" >
                 <div className="flex items-center gap-2 cursor-pointer"
-                    onClick={() => navigate("/home")}>
+                    onClick={handleHomeClick}>
                     <img
                         src="/logo/logo.png"
                         alt="Hisab NikaX Logo"
@@ -18,15 +19,11 @@ export default function Headbar() {
                         Hisab NikaX
                     </span>
                 </div>
-                <UserMenu
-                    user={{
-                        name: "User Account",
-                        username: "UserName_01",
-                        profileImage: "/logo/user.png",
-                    }}
-                />
+                <UserMenu />
             </div>
         </header >
     );
 
-}
+});
+
+export default Headbar;
