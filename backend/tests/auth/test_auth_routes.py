@@ -201,6 +201,7 @@ class TestTS003:
         headers = {"Content-Type": "application/x-www-form-urlencoded"}
         res = client.post("/api/v1/auth/login", data=payload, headers=headers)
         body = res.json()
+        print(body) 
 
         assert res.status_code == 200
         assert "access_token" in body
@@ -212,6 +213,7 @@ class TestTS003:
         headers = {"Authorization": f"Bearer {refresh}"}
         res = client.post("/api/v1/auth/refresh", headers=headers)
         body = res.json()
+        print(body) 
 
         assert res.status_code == 200
         assert "access_token" in body
