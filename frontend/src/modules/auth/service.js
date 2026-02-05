@@ -32,6 +32,23 @@ export async function loginUser({ username, password }) {
         }
 
         // Network / timeout error
-        throw { msg: "Network error. Please try again.", errors: {} };
+        throw { msg: "Network error. Please try again.", errors: error.name + ":" + error.message };
+    }
+}
+
+
+export async function logoutUser() {
+    try {
+        const response = await api.post("/auth/logout");
+        return response.data;
+
+    } catch (error) {
+        if (error.response) {
+            // Backend 4xx / 5xx
+            throw error.response.data;
+        }
+
+        // Network / timeout error
+        throw { msg: "Network error. Please try again.", errors: error.name + ":" + error.message };
     }
 }
