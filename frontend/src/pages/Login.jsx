@@ -1,8 +1,8 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { loginSchema } from "../modules/auth/schema";
-import { loginUser } from "../modules/auth/service";
-import InputWithPopup from '../components/InputWithPopup'
+import { loginSchema } from "@/modules/auth/schema";
+import { loginUser } from "@/modules/auth/service";
+import InputWithPopup from '@/components/InputWithPopup'
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/app/providers/auth-context";
 import { useState } from "react";
@@ -29,15 +29,14 @@ export default function Login() {
   const onSubmit = async (values) => {
     try {
       const tokens = await loginUser(values);
-
       login(tokens);
-      navigate("/home", { replace: true })
+      navigate("/home", { replace: true });
+      console.log("[login Success]");
 
-      console.log("[login Success]")
     } catch (error) {
-      setModalMsg(error.msg || "Login failed");
+      setModalMsg(error.msg + " " + error.errors || "Login failed");
       setModalOpen(true);
-      console.log("[Login Failed]", error.msg, error.errors)
+      console.log("[Login Failed]", error.msg, error.errors);
     }
   };
 
@@ -49,7 +48,7 @@ export default function Login() {
         <InputWithPopup name="password" type="password" placeholder="Password" register={register} error={errors.password} />
         <button type="submit" className="btn btn-primary md:col-span-2 m-1" disabled={isSubmitting}>
           {isSubmitting ? "Signing in..." : "Sign in"}
-          {isSubmitting && <Spinner/>}
+          {isSubmitting && <Spinner />}
         </button>
       </form>
       <Modal
