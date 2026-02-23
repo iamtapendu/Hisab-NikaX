@@ -9,7 +9,7 @@ export default function BaseLayout() {
         <div className="min-h-screen min-w-screen grid grid-rows-[48px_1fr] m-0 p-0 bg-background">
             <Headbar />
             <div
-                className={`grid transition-all duration-300 ease-in-out
+                className={`col-span-2 grid transition-all duration-300 ease-in-out
                 ${sidebarOpen ? "grid-cols-[14rem_1fr]" : "grid-cols-[0_1fr]"}`}
             >
                 <SideNavbar isOpen={sidebarOpen} onToggle={setSidebarOpen} />

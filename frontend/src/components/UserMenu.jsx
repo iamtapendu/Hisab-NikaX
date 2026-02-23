@@ -44,7 +44,7 @@ const UserMenu = memo(function UserMenu() {
             {/* Popover */}
             {open && (
                 <div
-                    className="absolute right-0 top-12 w-56 bg-background rounded-md shadow-md 
+                    className="absolute right-0 top-12 w-60 bg-background rounded-md shadow-md 
                         shadow-foreground border z-50 "
                 >
                     <div
