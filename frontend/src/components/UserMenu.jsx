@@ -2,7 +2,6 @@ import { memo, useState } from "react"
 import ThemeSwitcher from '@/components/ThemeSwitcher'
 import { useAuth } from "../app/providers/auth-context";
 import { useNavigate } from "react-router-dom";
-import api from "@/lib/api";
 import { logoutUser } from "@/modules/auth/service";
 
 const UserMenu = memo(function UserMenu() {
@@ -19,8 +18,7 @@ const UserMenu = memo(function UserMenu() {
 
     const onProfile = () => {
         setOpen(false);
-        navigate("/profile");
-        api.get("/users/profile");
+        navigate("/users/profile");
     }
 
     return (
@@ -47,20 +45,23 @@ const UserMenu = memo(function UserMenu() {
             {open && (
                 <div
                     className="absolute right-0 top-12 w-56 bg-background rounded-md shadow-md 
-                        shadow-foreground border z-50"
+                        shadow-foreground border z-50 "
                 >
-                    <div className="p-4 border-b">
+                    <div
+                        className="p-4 border-b grid grid-cols-[30%_70%] items-center hover:bg-tertiary-hv"
+                        onClick={onProfile}
+                    >
+                        <img
+                            src={user?.profileImage || "/logo/user.png"}
+                            alt="User profile"
+                            className="h-10 w-10 row-span-2 rounded-full object-cover"
+                        />
                         <p className="font-semibold capitalize">{user?.name ?? "User"}</p>
                         <p className="text-sm text-foreground/40">{user?.username ?? "Username"}</p>
                     </div>
                     <ThemeSwitcher />
 
                     <div className="flex flex-col border-t border-foreground/40">
-                        <button className="px-4 py-2 text-left hover:bg-tertiary-hv"
-                            onClick={onProfile}
-                        >
-                            Profile
-                        </button>
                         <button className="px-4 py-2 text-left hover:bg-tertiary-hv">
                             Settings
                         </button>
