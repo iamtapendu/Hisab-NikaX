@@ -8,9 +8,9 @@ export default function InputWithPopup({
     defaultValue = "",
 }) {
     return (
-        <div className="w-full">
+        <div className="flex items-center w-full">
             {label && (
-                <label className="block mb-1 font-medium text-sm">
+                <label className="font-medium w-32">
                     {label}
                 </label>
             )}
