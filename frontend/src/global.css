@@ -77,7 +77,7 @@
 @layer components {
   .btn {
     @apply rounded-lg px-4 py-2 font-semibold transition-colors border border-foreground
-    hover:bg-foreground hover:text-background focus:outline-none focus:ring-1 focus:ring-foreground;
+    hover:bg-foreground hover:text-background focus:outline-none focus:ring-0;
   }
 
   .btn-primary {
