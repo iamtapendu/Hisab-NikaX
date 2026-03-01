@@ -4,6 +4,7 @@ export default function InputWithPopup({
     name,
     type = "text",
     placeholder,
+    defaultValue = "",
 }) {
     return (
         <div className="relative w-full group">
@@ -12,6 +13,7 @@ export default function InputWithPopup({
                 {...register(name)}
                 type={type}
                 placeholder={placeholder}
+                defaultValue={defaultValue}
                 className={`input p-2 m-1 ${error ? "border-danger focus:ring-danger" : ""}`}
             />
 
