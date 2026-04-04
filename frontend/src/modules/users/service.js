@@ -1,28 +1,30 @@
 import api from '@/lib/api';
+import { handleRequest } from '@/lib/utils';
 
-
-export async function getProfile() {
-    try {
-        const response = await api.get("/users/profile");
-        return response.data;
-    } catch (error) {
-        if (error.response)
-            throw error.response.data;
-
-        throw { msg: "Network error. Please try again.", errors: error.name + ":" + error.message };
-    }
-
+export const getProfile = () => {
+    return handleRequest(api.get("/users/profile"));
 }
 
-export async function getAllUsers() {
-    try {
-        const response = await api.get("/users/");
-        return response.data;
-    } catch (error) {
-        if (error.response)
-            throw error.response.data;
+export const getAllUsers = () => {
+    return handleRequest(api.get("/users/"));
+}
 
-        throw { msg: "Network error. Please try again.", errors: error.name + ":" + error.message };
-    }
+export const getUser = (user_id) => {
+    return handleRequest(api.get(`/users/${user_id}`));
+}
 
+export const getUserByUsername = (username) => {
+    return handleRequest(api.get(`/users/username/${username}`));
+}
+
+export const createUser = (payload) => {
+    return handleRequest(api.post("/users/", payload));
+}
+
+export const updateUser = (user_id, payload) => {
+    return handleRequest(api.put(`/users/${user_id}`, payload));
+}
+
+export const updatePassword = (user_id, payload) => {
+    return handleRequest(api.patch(`/users/${user_id}/password`, payload));
 }
