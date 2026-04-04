@@ -17,7 +17,7 @@ class UserBase(BaseModel):
     )
     name: str = Field(
         ...,
-        min_length=1,
+        min_length=3,
         max_length=50,
         pattern=r"^[A-Za-z][A-Za-z0-9 ]{3,49}$",
     )
