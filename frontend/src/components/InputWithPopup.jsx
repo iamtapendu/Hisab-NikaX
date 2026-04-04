@@ -5,7 +5,6 @@ export default function InputWithPopup({
     placeholder,
     type = "text",
     label = "",
-    defaultValue = "",
 }) {
     return (
         <div className="flex items-center w-full">
@@ -20,7 +19,6 @@ export default function InputWithPopup({
                     {...register(name)}
                     type={type}
                     placeholder={placeholder}
-                    defaultValue={defaultValue}
                     className={`input p-2 m-1 ${error ? "border-danger focus:ring-danger" : ""}`}
                 />
 
@@ -39,7 +37,7 @@ export default function InputWithPopup({
                             className="absolute right-0 bottom-10 m-1 w-56 rounded-md
                          bg-foreground text-background text-sm p-1 shadow-lg border-0
                          opacity-0 scale-50 group-hover:opacity-95 group-hover:scale-100
-                         transition-all z-20 text-center"
+                         transition-all z-50 text-center"
                         >
                             {error.message}
                         </div>
