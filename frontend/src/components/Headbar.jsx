@@ -6,7 +6,7 @@ const Headbar = memo(function Headbar() {
     const navigate = useNavigate();
     const handleHomeClick = () => navigate("/home");
     return (
-        <header className="col-span-2 bg-primary-hv h-12 flex items-center px-4 shadow-md z-50">
+        <header className="col-span-2 bg-primary-hv h-12 flex items-center px-4 shadow-md z-25">
             <div className="flex justify-between items-center w-full" >
                 <div className="flex items-center gap-2 cursor-pointer"
                     onClick={handleHomeClick}>
