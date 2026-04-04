@@ -40,7 +40,7 @@ export const usersSchema = z.object({
     image: z
         .string()
         .max(50, "Image filename is too long")
-        .regex(/^[A-Za-z0-9_/\-]+\.(jpg|jpeg|png)$/, "Invalid Image")
+        .regex(/^[A-Za-z0-9_/-]+\.(jpg|jpeg|png)$/, "Invalid Image")
         .optional(),
 
 
