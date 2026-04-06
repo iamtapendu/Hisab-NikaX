@@ -9,7 +9,8 @@ export default function EditableField({
     register,
     error,
     placeholder,
-    className = ""
+    className = "",
+    type="text"
 }) {
     if (isEditing) {
         return (
@@ -19,13 +20,14 @@ export default function EditableField({
                 placeholder={placeholder || label}
                 register={register}
                 error={error}
+                type={type}
             />
         )
     }
 
     return (
         <span className={`${className}`}>
-           {showLabel?label:""} {value || "N/A"}
+           {showLabel?label:""} {value || ""}
         </span>
     )
 }
