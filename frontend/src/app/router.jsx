@@ -5,7 +5,6 @@ import Profile from '@/pages/Profile'
 import PublicRoute from "./layouts/PublicRoute";
 import ProtectedRoute from "./layouts/ProtectedRoute";
 import BaseLayout from "./layouts/BaseLayout";
-import App from "@/App";
 
 export const router = createBrowserRouter([
     {
@@ -34,19 +33,11 @@ export const router = createBrowserRouter([
     {
         element: (
             <ProtectedRoute>
-                <BaseLayout/>
+                <BaseLayout />
             </ProtectedRoute>
         ),
-         children: [
-            { path: "/users/profile", element: <Profile/> },
+        children: [
+            { path: "/users/profile", element: <Profile /> },
         ],
-    },
-    {
-        path: "/app",
-        element: (
-            // <ProtectedRoute>
-            <App />
-            // </ProtectedRoute>
-        ),
-    },
+    }
 ]);
