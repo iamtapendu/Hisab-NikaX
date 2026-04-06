@@ -1,19 +1,26 @@
 import { memo } from "react";
+import { useNavigate } from "react-router-dom";
+
 
 const MENU_ITEMS = [
     "Dashboard",
     "Customers",
     "Suppliers",
     "Sales",
-    "Purchase",
+    "Purchases",
     "Expenses",
     "Inventory",
-    "Staff",
+    "Staffs",
     "Reports",
     "Users",
 ]
 
 const SideNavbar = memo(function SideNavbar({ isOpen, onToggle }) {
+    const navigate = useNavigate();
+
+    const handleNavigate = (item) => {
+        navigate(`/${item.toLowerCase()}`);
+    };
 
     return (
         <aside
@@ -26,14 +33,15 @@ const SideNavbar = memo(function SideNavbar({ isOpen, onToggle }) {
             >
 
                 {MENU_ITEMS.map(item => (
-                    <span
+                    <button
                         key={item}
                         className="flex-1 flex w-full justify-center items-center font-bold
                                  text-background cursor-pointer hover:bg-primary-hv transition 
                                  border border-primary-hv"
+                        onClick={() => handleNavigate(item)}
                     >
                         {item}
-                    </span>
+                    </button>
                 ))}
             </nav>
 
