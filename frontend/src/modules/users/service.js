@@ -26,5 +26,5 @@ export const updateUser = (user_id, payload) => {
 }
 
 export const updatePassword = (user_id, payload) => {
-    return handleRequest(api.patch(`/users/${user_id}/password`, payload));
+    return handleRequest(api.patch(`/users/${user_id}`, payload));
 }
