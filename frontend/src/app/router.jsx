@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 import AuthLayout from "./layouts/AuthLayout";
 import Login from "@/pages/Login";
 import Profile from '@/pages/Profile'
+import Home from '@/pages/Home.jsx'
 import PublicRoute from "./layouts/PublicRoute";
 import ProtectedRoute from "./layouts/ProtectedRoute";
 import BaseLayout from "./layouts/BaseLayout";
@@ -31,7 +32,7 @@ export const router = createBrowserRouter([
             </ProtectedRoute>
         ),
         children: [
-            { path: "/home" },
+            { path: "/home", element: <Home /> },
             { path: "/users", element: <Users /> },
             { path: "/users/profile", element: <Profile /> },
             { path: "*", element: <NotFound /> },
