@@ -1,8 +1,14 @@
 // components/Spinner.jsx
-export default function Spinner({ size = 4 }) {
+
+const sizeMap = {
+  sm: "h-4 w-4",
+  md: "h-6 w-6",
+  lg: "h-8 w-8",
+};
+export default function Spinner({ size = "sm" }) {
   return (
     <span
-      className={`inline-block h-${size} w-${size} animate-spin rounded-full border-2 border-current border-t-transparent`}
+      className={`inline-block ${sizeMap[size]} animate-spin rounded-full border-2 border-current border-t-transparent`}
     />
   );
 }
