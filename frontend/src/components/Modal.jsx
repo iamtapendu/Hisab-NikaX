@@ -1,20 +1,20 @@
 import { createPortal } from "react-dom";
 import { useEffect } from "react"
 
-export default function Modal({ open, message, onClose }) {
-    
+export default function Modal({ open, title = "Message", message, children, onClose }) {
+
     useEffect(() => {
         if (!open) return;
-        
+
         const handler = (e) => {
             if (e.key === "Escape") onClose();
             if (e.key === "Enter") onClose();
         }
         window.addEventListener("keydown", handler);
-        
+
         return () => window.removeEventListener("keydown", handler);
     }, [open, onClose]);
-    
+
     if (!open) return null;
 
     return createPortal(
@@ -26,7 +26,7 @@ export default function Modal({ open, message, onClose }) {
             />
 
             {/* Modal box */}
-            <div className="relative z-10 w-full max-w-sm rounded-lg bg-background p-6 shadow-lg">
+            <div className="relative z-10 w-full max-w-md rounded-lg bg-background p-6 shadow-lg">
 
                 {/* Close button (top-right) */}
                 <button
@@ -39,23 +39,25 @@ export default function Modal({ open, message, onClose }) {
 
                 {/* Header */}
                 <h2 className="text-lg font-semibold text-foreground mb-3">
-                    Message
+                    {title}
                 </h2>
 
                 {/* Message body */}
-                <p className="text-foreground m-6">
-                    {message}
-                </p>
+                <div className="text-foreground m-6">
+                    {children ? children : message}
+                </div>
 
                 {/* Footer */}
-                <div className="flex justify-end">
-                    <button
-                        onClick={onClose}
-                        className="btn btn-primary py-1 px-2"
-                    >
-                        OK
-                    </button>
-                </div>
+                {!children && (
+                    <div className="flex justify-end">
+                        <button
+                            onClick={onClose}
+                            className="btn btn-primary py-1 px-2"
+                        >
+                            OK
+                        </button>
+                    </div>
+                )}
             </div>
 
         </div>,
